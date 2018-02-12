@@ -10,12 +10,12 @@ sig
   val get_names: unit -> string list
   val lookup_theory: string -> theory option
   val get_theory: string -> theory
-  val pure_theory: unit -> theory
   val master_directory: string -> Path.T
   val remove_thy: string -> unit
   val use_theories:
     {document: bool,
      symbols: HTML.symbols,
+     bibtex_entries: string list,
      last_timing: Toplevel.transition -> Time.time,
      qualifier: string,
      master_dir: Path.T} -> (string * Position.T) list -> unit
@@ -101,8 +101,6 @@ fun get_theory name =
     SOME theory => theory
   | _ => error ("Theory loader: undefined entry for theory " ^ quote name));
 
-fun pure_theory () = get_theory Context.PureN;
-
 val get_imports = Resources.imports_of o get_theory;
 
 
@@ -160,7 +158,7 @@ fun join_theory (Result {theory, exec_id, ...}) =
   in res :: map Exn.Exn exns end;
 
 datatype task =
-  Task of Path.T * string list * (theory list -> result) |
+  Task of string list * (theory list -> result) |
   Finished of theory;
 
 fun task_finished (Task _) = false
@@ -171,7 +169,7 @@ fun task_parents deps (parents: string list) = map (the o AList.lookup (op =) de
 val schedule_seq =
   String_Graph.schedule (fn deps => fn (_, task) =>
     (case task of
-      Task (_, parents, body) =>
+      Task (parents, body) =>
         let
           val result = body (task_parents deps parents);
           val _ = Par_Exn.release_all (join_theory result);
@@ -185,7 +183,7 @@ val schedule_futures = Thread_Attributes.uninterruptible (fn _ => fn tasks =>
     val futures = tasks
       |> String_Graph.schedule (fn deps => fn (name, task) =>
         (case task of
-          Task (_, parents, body) =>
+          Task (parents, body) =>
             (singleton o Future.forks)
               {name = "theory:" ^ name, group = NONE,
                 deps = map (Future.task_of o #2) deps, pri = 0, interrupts = true}
@@ -284,7 +282,8 @@ fun excursion keywords master_dir last_timing init elements =
     val thy = Toplevel.end_theory end_pos end_state;
   in (results, thy) end;
 
-fun eval_thy document symbols last_timing update_time master_dir header text_pos text parents =
+fun eval_thy {document, symbols, bibtex_entries, last_timing} update_time master_dir header
+    text_pos text parents =
   let
     val (name, _) = #name header;
     val keywords =
@@ -301,7 +300,7 @@ fun eval_thy document symbols last_timing update_time master_dir header text_pos
 
     fun init () =
       Resources.begin_theory master_dir header parents
-      |> Present.begin_theory update_time
+      |> Present.begin_theory bibtex_entries update_time
         (fn () => implode (map (HTML.present_span symbols keywords) spans));
 
     val (results, thy) =
@@ -312,10 +311,9 @@ fun eval_thy document symbols last_timing update_time master_dir header text_pos
       let
         val res = filter_out (Toplevel.is_ignored o #1) (maps Toplevel.join_results results);
       in
-        if exists (Toplevel.is_skipped_proof o #2) res then
-          warning ("Cannot present theory with skipped proofs: " ^ quote name)
+        if exists (Toplevel.is_skipped_proof o #2) res then ()
         else
-          if document then let val tex_source = Thy_Output.present_thy thy res toks |> Buffer.content in Present.theory_output thy tex_source end else ()
+          if document then let val body = Thy_Output.present_thy thy res toks in Present.theory_output text_pos thy body end else ()
       end;
 
   in (thy, present, size text) end;
@@ -328,8 +326,7 @@ local
 fun required_by _ [] = ""
   | required_by s initiators = s ^ "(required by " ^ show_path (rev initiators) ^ ")";
 
-fun load_thy document symbols last_timing
-    initiators update_time deps text (name, pos) keywords parents =
+fun load_thy context initiators update_time deps text (name, pos) keywords parents =
   let
     val _ = remove_thy name;
     val _ = writeln ("Loading theory " ^ quote name ^ required_by " " initiators);
@@ -346,10 +343,17 @@ fun load_thy document symbols last_timing
       Execution.running Document_ID.none exec_id [] orelse
         raise Fail ("Failed to register execution: " ^ Document_ID.print exec_id);
 
+    val timing_start = Timing.start ();
+
     val text_pos = Position.put_id (Document_ID.print exec_id) (Path.position thy_path);
     val (theory, present, weight) =
-      eval_thy document symbols last_timing update_time dir header text_pos text
+      eval_thy context update_time dir header text_pos text
         (if name = Context.PureN then [Context.the_global_context ()] else parents);
+
+    val timing_result = Timing.result timing_start;
+    val timing_props = [Markup.theory_timing, (Markup.nameN, name)];
+    val _  = Output.try_protocol_message (timing_props @ Markup.timing_properties timing_result) []
+
     fun commit () = update_thy deps theory;
   in
     Result {theory = theory, exec_id = exec_id, present = present, commit = commit, weight = weight}
@@ -375,24 +379,14 @@ fun check_deps dir name =
 
 in
 
-fun require_thys document symbols last_timing initiators qualifier dir strs tasks =
-      fold_map (require_thy document symbols last_timing initiators qualifier dir) strs tasks
-      |>> forall I
-and require_thy document symbols last_timing initiators qualifier dir (s, require_pos) tasks =
+fun require_thys context initiators qualifier dir strs tasks =
+      fold_map (require_thy context initiators qualifier dir) strs tasks |>> forall I
+and require_thy context initiators qualifier dir (s, require_pos) tasks =
   let
-    val {node_name, master_dir, theory_name} = Resources.import_name qualifier dir s;
-    fun check_entry (Task (node_name', _, _)) =
-          if op = (apply2 File.platform_path (node_name, node_name'))
-          then ()
-          else
-            error ("Incoherent imports for theory " ^ quote theory_name ^
-              Position.here require_pos ^ ":\n" ^
-              "  " ^ Path.print node_name ^ "\n" ^
-              "  " ^ Path.print node_name')
-      | check_entry _ = ();
+    val {master_dir, theory_name, ...} = Resources.import_name qualifier dir s;
   in
     (case try (String_Graph.get_node tasks) theory_name of
-      SOME task => (check_entry task; (task_finished task, tasks))
+      SOME task => (task_finished task, tasks)
     | NONE =>
         let
           val _ = member (op =) initiators theory_name andalso error (cycle_msg initiators);
@@ -408,8 +402,7 @@ and require_thy document symbols last_timing initiators qualifier dir (s, requir
 
           val parents = map (#theory_name o Resources.import_name qualifier' dir' o #1) imports;
           val (parents_current, tasks') =
-            require_thys document symbols last_timing (theory_name :: initiators)
-              qualifier' dir' imports tasks;
+            require_thys context (theory_name :: initiators) qualifier' dir' imports tasks;
 
           val all_current = current andalso parents_current;
           val task =
@@ -421,9 +414,9 @@ and require_thy document symbols last_timing initiators qualifier dir (s, requir
                   let
                     val update_time = serial ();
                     val load =
-                      load_thy document symbols last_timing initiators update_time dep
-                        text (theory_name, theory_pos) keywords;
-                  in Task (node_name, parents, load) end);
+                      load_thy context initiators update_time
+                        dep text (theory_name, theory_pos) keywords;
+                  in Task (parents, load) end);
 
           val tasks'' = new_entry theory_name parents task tasks';
         in (all_current, tasks'') end)
@@ -434,16 +427,19 @@ end;
 
 (* use theories *)
 
-fun use_theories {document, symbols, last_timing, qualifier, master_dir} imports =
+fun use_theories {document, symbols, bibtex_entries, last_timing, qualifier, master_dir} imports =
   let
-    val (_, tasks) =
-      require_thys document symbols last_timing [] qualifier master_dir imports String_Graph.empty;
+    val context =
+      {document = document, symbols = symbols, bibtex_entries = bibtex_entries,
+        last_timing = last_timing};
+    val (_, tasks) = require_thys context [] qualifier master_dir imports String_Graph.empty;
   in if Multithreading.enabled () then schedule_futures tasks else schedule_seq tasks end;
 
 fun use_thy name =
   use_theories
-    {document = false, symbols = HTML.no_symbols, last_timing = K Time.zeroTime,
-     qualifier = Resources.default_qualifier, master_dir = Path.current}
+    {document = false, symbols = HTML.no_symbols, bibtex_entries = [],
+      last_timing = K Time.zeroTime, qualifier = Resources.default_qualifier,
+      master_dir = Path.current}
     [(name, Position.none)];
 
 

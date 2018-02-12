@@ -738,8 +738,8 @@ lemma cancel\<^sub>i\<^sub>m\<^sub>p\<^sub>l\<^sub>e\<^sub>m\<^sub>e\<^sub>n\<^s
                                       ((\<sigma>, \<sigma>') \<Turnstile> \<upsilon> r) \<longrightarrow>
                                       ((\<sigma>, \<sigma>') \<Turnstile> (cancel\<^sub>p\<^sub>o\<^sub>s\<^sub>t  self r result))"
 proof -
- def \<sigma>'' \<equiv> "\<lparr> heap = K \<lfloor>in\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t (mk\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t (mk\<E>\<X>\<T>\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t 0 None) None)\<rfloor>
-            , assocs = Map.empty (oid\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t_0___cl_res \<mapsto> []) \<rparr>"
+  define \<sigma>'' where "\<sigma>'' \<equiv> \<lparr> heap = K \<lfloor>in\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t (mk\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t (mk\<E>\<X>\<T>\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t 0 None) None)\<rfloor>
+                          , assocs = Map.empty (oid\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t_0___cl_res \<mapsto> []) \<rparr>"
 
  have self_definition: "\<And>\<tau>. \<tau> \<Turnstile> \<delta> self \<Longrightarrow> \<exists>ta xa x. self \<tau> = \<lfloor>\<lfloor>mk\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t (mk\<E>\<X>\<T>\<^sub>C\<^sub>l\<^sub>i\<^sub>e\<^sub>n\<^sub>t ta xa) x\<rfloor>\<rfloor>"
   apply(simp add:OclValid_def defined_def true_def false_def split: if_split_asm)

@@ -28,10 +28,9 @@ sig
   val local_theory_to_proof: command_keyword -> string ->
     (local_theory -> Proof.state) parser -> unit
   val bootstrap: bool Config.T
-  val parse: theory -> Position.T -> string -> Toplevel.transitions list
   val parse_tokens: theory -> Token.T list -> Toplevel.transitions list
+  val parse: theory -> Position.T -> string -> Toplevel.transitions list
   val parse_spans: Token.T list -> Command_Span.span list
-  val side_comments: Token.T list -> Token.T list
   val command_reports: theory -> Token.T -> Position.report_text list
   val check_command: Proof.context -> command_keyword -> string
 end;
@@ -201,10 +200,10 @@ val before_command =
   Scan.option (Parse.position (Parse.private >> K true || Parse.qualified >> K false));
 
 fun parse_command thy =
-  Scan.ahead (before_command |-- Parse.position Parse.command_) :|-- (fn (name, pos) =>
+  Scan.ahead (before_command |-- Parse.position Parse.command) :|-- (fn (name, pos) =>
     let
       val keywords = Thy_Header.get_keywords thy;
-      val command_tags = Parse.command_ -- Parse.tags;
+      val command_tags = Parse.command -- Parse.tags;
       fun tr0 name =
         Toplevel.empty
         |> Toplevel.name name
@@ -228,27 +227,18 @@ fun parse_command thy =
             in msg ^ quote (Markup.markup Markup.keyword1 name) end))
     end);
 
-val parse_cmt = (Parse.$$$ "--" || Parse.$$$ Symbol.comment) -- Parse.!!! Parse.document_source;
-
-fun commands_source thy =
-  Token.source_proper #>
-  Source.source Token.stopper (Scan.bulk (parse_cmt >> K NONE || Parse.not_eof >> SOME)) #>
-  Source.map_filter I #>
-  Source.source Token.stopper (Scan.bulk (fn xs => Parse.!!! (parse_command thy) xs));
-
 in
 
-fun parse thy pos =
-  Symbol.explode
+fun parse_tokens thy =
+  filter Token.is_proper
   #> Source.of_list
-  #> Token.source (Thy_Header.get_keywords thy) pos
-  #> commands_source thy
+  #> Source.source Token.stopper (Scan.bulk (fn xs => Parse.!!! (parse_command thy) xs))
   #> Source.exhaust;
 
-fun parse_tokens thy =
-  Source.of_list
-  #> commands_source thy
-  #> Source.exhaust;
+fun parse thy pos text =
+  Symbol_Pos.explode (text, pos)
+  |> Token.tokenize (Thy_Header.get_keywords thy) {strict = false}
+  |> parse_tokens thy;
 
 end;
 
@@ -289,16 +279,6 @@ fun parse_spans toks =
 end;
 
 
-(* side-comments *)
-
-fun cmts (t1 :: t2 :: toks) =
-      if Token.keyword_with (fn s => s = "--" orelse s = Symbol.comment) t1 then t2 :: cmts toks
-      else cmts (t2 :: toks)
-  | cmts _ = [];
-
-val side_comments = filter Token.is_proper #> cmts;
-
-
 (* check commands *)
 
 fun command_reports thy tok =
@@ -318,7 +298,7 @@ fun check_command ctxt (name, pos) =
     if Keyword.is_command keywords name then
       let
         val markup =
-          Token.explode keywords Position.none name
+          Token.explode0 keywords name
           |> maps (command_reports thy)
           |> map (#2 o #1);
         val _ = Context_Position.reports ctxt (map (pair pos) markup);

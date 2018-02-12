@@ -131,7 +131,7 @@ fun read keywords thy master_dir init blobs_info span =
   let
     val command_reports = Outer_Syntax.command_reports thy;
 
-    val proper_range = Token.range_of (#1 (take_suffix Token.is_improper span));
+    val proper_range = Token.range_of (drop_suffix Token.is_improper span);
     val pos =
       (case find_first Token.is_command span of
         SOME tok => Token.pos_of tok
@@ -195,14 +195,14 @@ fun run keywords int tr st =
       (fn () => Toplevel.command_exception int tr st); ([], SOME st))
   else Toplevel.command_errors int tr st;
 
-fun check_cmts span tr st' =
-  Toplevel.setmp_thread_position tr
-    (fn () =>
-      Outer_Syntax.side_comments span |> maps (fn cmt =>
-        (Thy_Output.output_text st' {markdown = false} (Token.input_of cmt); [])
-          handle exn =>
-            if Exn.is_interrupt exn then Exn.reraise exn
-            else Runtime.exn_messages exn)) ();
+fun check_token_comments ctxt tok =
+  (Thy_Output.check_comments ctxt (Input.source_explode (Token.input_of tok)); [])
+    handle exn =>
+      if Exn.is_interrupt exn then Exn.reraise exn
+      else Runtime.exn_messages exn;
+
+fun check_span_comments ctxt span tr =
+  Toplevel.setmp_thread_position tr (fn () => maps (check_token_comments ctxt) span) ();
 
 fun report tr m =
   Toplevel.setmp_thread_position tr (fn () => Output.report [Markup.markup_only m]) ();
@@ -234,7 +234,13 @@ fun eval_state' keywords span tr state =
     val _ = command_indent tr st;
     val _ = status tr Markup.running;
     val (errs1, result) = run keywords true tr st;
-    val errs2 = (case result of NONE => [] | SOME st' => check_cmts span tr st');
+    val errs2 =
+      (case result of
+        NONE => []
+      | SOME st' =>
+          (case try Toplevel.presentation_context st' of
+            NONE => []
+          | SOME ctxt' => check_span_comments ctxt' span tr));
     val errs = errs1 @ errs2;
     val _ = List.app (Future.error_message (Toplevel.pos_of tr)) errs;
   in

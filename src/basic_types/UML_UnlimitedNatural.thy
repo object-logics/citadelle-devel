@@ -228,7 +228,7 @@ definition OclAdd\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>
 where "x +\<^sub>n\<^sub>a\<^sub>t y \<equiv> \<lambda> \<tau>. if (\<mu> x) \<tau> = true \<tau> \<and> (\<mu> y) \<tau> = true \<tau>
                 then \<lfloor>\<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x \<tau>\<rceil>\<rceil>\<rceil> + \<lceil>\<lceil>\<lceil>y \<tau>\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>\<rfloor>
                 else invalid \<tau> "
-interpretation OclAdd\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "op +\<^sub>n\<^sub>a\<^sub>t" "\<lambda> x y. \<lfloor>\<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> + \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>\<rfloor>"
+interpretation OclAdd\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "(+\<^sub>n\<^sub>a\<^sub>t)" "\<lambda> x y. \<lfloor>\<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> + \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>\<rfloor>"
          apply (unfold_locales, auto simp:OclAdd\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l_def bot_option_def null_option_def infinity_option_def)
          sorry
 (* TODO: special locale setup.*)
@@ -238,7 +238,7 @@ definition OclMinus\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^su
 where "x -\<^sub>n\<^sub>a\<^sub>t y \<equiv> \<lambda> \<tau>. if (\<mu> x) \<tau> = true \<tau> \<and> (\<mu> y) \<tau> = true \<tau>
                        then \<lfloor>\<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x \<tau>\<rceil>\<rceil>\<rceil> - \<lceil>\<lceil>\<lceil>y \<tau>\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>\<rfloor>
                        else invalid \<tau> "
-interpretation OclMinus\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "op -\<^sub>n\<^sub>a\<^sub>t" "\<lambda> x y. \<lfloor>\<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> - \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>\<rfloor>"
+interpretation OclMinus\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "(-\<^sub>n\<^sub>a\<^sub>t)" "\<lambda> x y. \<lfloor>\<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> - \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>\<rfloor>"
          apply (unfold_locales, auto simp:OclMinus\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l_def bot_option_def null_option_def infinity_option_def)
          sorry
 (* TODO: special locale setup.*)
@@ -248,7 +248,7 @@ definition OclMult\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub
 where "x *\<^sub>n\<^sub>a\<^sub>t y \<equiv> \<lambda> \<tau>. if (\<mu> x) \<tau> = true \<tau> \<and> (\<mu> y) \<tau> = true \<tau>
                        then \<lfloor>\<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x \<tau>\<rceil>\<rceil>\<rceil> * \<lceil>\<lceil>\<lceil>y \<tau>\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>\<rfloor>
                        else invalid \<tau> "
-interpretation OclMult\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "op *\<^sub>n\<^sub>a\<^sub>t" "\<lambda> x y. \<lfloor>\<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> * \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>\<rfloor>"
+interpretation OclMult\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "( *\<^sub>n\<^sub>a\<^sub>t)" "\<lambda> x y. \<lfloor>\<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> * \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>\<rfloor>"
          apply (unfold_locales, auto simp:OclMult\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l_def bot_option_def null_option_def infinity_option_def)
          sorry
 (* TODO: special locale setup.*)
@@ -275,7 +275,7 @@ where "x <\<^sub>n\<^sub>a\<^sub>t y \<equiv> \<lambda> \<tau>. if (\<mu> x) \<t
                 else if (\<delta> x) \<tau> = true \<tau> \<and> (\<delta> y) \<tau> = true \<tau>
                 then (\<mu> x) \<tau>
                 else invalid \<tau>"
-interpretation OclLess\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "op <\<^sub>n\<^sub>a\<^sub>t" "\<lambda> x y. \<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> < \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>"
+interpretation OclLess\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "(<\<^sub>n\<^sub>a\<^sub>t)" "\<lambda> x y. \<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> < \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>"
          apply (unfold_locales, auto simp:OclLess\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l_def bot_option_def null_option_def infinity_option_def)
          oops
 (* TODO: special locale setup.*)
@@ -286,7 +286,7 @@ where "x \<le>\<^sub>n\<^sub>a\<^sub>t y \<equiv> \<lambda> \<tau>. if (\<mu> x)
                 else if (\<delta> x) \<tau> = true \<tau> \<and> (\<delta> y) \<tau> = true \<tau>
                 then not (\<mu> y) \<tau>
                 else invalid \<tau>"
-interpretation OclLe\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "op \<le>\<^sub>n\<^sub>a\<^sub>t" "\<lambda> x y. \<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> \<le> \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>"
+interpretation OclLe\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l : profile_bin\<^sub>d_\<^sub>d "(\<le>\<^sub>n\<^sub>a\<^sub>t)" "\<lambda> x y. \<lfloor>\<lfloor>\<lceil>\<lceil>\<lceil>x\<rceil>\<rceil>\<rceil> \<le> \<lceil>\<lceil>\<lceil>y\<rceil>\<rceil>\<rceil>\<rfloor>\<rfloor>"
          apply (unfold_locales, auto simp:OclLe\<^sub>U\<^sub>n\<^sub>l\<^sub>i\<^sub>m\<^sub>i\<^sub>t\<^sub>e\<^sub>d\<^sub>N\<^sub>a\<^sub>t\<^sub>u\<^sub>r\<^sub>a\<^sub>l_def bot_option_def null_option_def infinity_option_def)
          oops
 (* TODO: special locale setup.*)

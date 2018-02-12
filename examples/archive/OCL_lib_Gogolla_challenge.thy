@@ -689,12 +689,7 @@ proof -
   apply(rule including_cp_all) apply(simp) apply(rule all_defined1, blast) apply(simp)
   apply(rule conjI) apply(rule allI)+
   apply(rule impI)+ apply(rule including_notempty) apply(rule all_defined1, blast) apply(simp) apply(simp)
-  apply(rule conjI) apply(rule allI)+
-  apply(rule iff[THEN mp, THEN mp], rule impI)
-  apply(rule invert_all_defined, simp)
-  apply(rule impI, rule cons_all_def') apply(simp) apply(simp)
-  apply(rule allI)+ apply(rule impI)+
- by simp
+ by (metis OclIncluding_commute cons_all_def' invert_all_defined)
 qed
 
 lemma including_commute2_generic :
@@ -721,16 +716,7 @@ proof -
   apply(rule impI)+
   apply(rule including_notempty) using all_defined1 cons_all_def' i_int int_is_valid apply blast apply(simp)
   apply(rule including_notempty) apply(rule all_defined1, blast) apply(simp add: i_val) apply(simp)
-  apply(rule conjI) apply(rule allI)+
-
-  apply(rule iff[THEN mp, THEN mp], rule impI)
-  apply(drule invert_all_defined, drule conjE) prefer 2 apply assumption
-  apply(drule invert_all_defined, drule conjE) prefer 2 apply assumption
-  apply(simp)
-
-  apply(rule impI, rule cons_all_def', rule cons_all_def') apply(simp) apply(simp add: i_val) apply(simp)
-  apply(rule allI)+ apply(rule impI)+
- by(simp)
+ by (metis OclIncluding_commute cons_all_def' i_val invert_all_defined)
 qed
 
 lemma including_commute4_generic :
@@ -785,17 +771,7 @@ proof -
   apply(rule including_notempty)  apply (metis (hide_lams, no_types) all_defined1 cons_all_def i_val j_val) apply(simp)
   apply(rule including_notempty)  apply (metis (hide_lams, no_types) all_defined1 cons_all_def i_val)  apply(simp add: j_val)
   apply(rule including_notempty) apply(rule all_defined1, blast) apply(simp add: i_val) apply(simp)
-  apply(rule conjI) apply(rule allI)+
-
-  apply(rule iff[THEN mp, THEN mp], rule impI)
-  apply(drule invert_all_defined, drule conjE) prefer 2 apply assumption
-  apply(drule invert_all_defined, drule conjE) prefer 2 apply assumption
-  apply(drule invert_all_defined, drule conjE) prefer 2 apply assumption
-  apply(simp)
-
-  apply(rule impI, rule cons_all_def', rule cons_all_def', rule cons_all_def') apply(simp) apply(simp add: i_val) apply(simp add: j_val) apply(simp)
-  apply(rule allI)+ apply(rule impI)+
- by simp
+ by (metis (no_types, hide_lams) OclIncluding_commute cons_all_def' i_val invert_all_defined j_val)
 qed
 
 section{* Properties: (with comp fun commute) OclIterate *}
@@ -1529,10 +1505,10 @@ proof -
             is_int x \<Longrightarrow>
             x \<notin> F \<Longrightarrow>
             \<forall>x. (\<forall>\<tau>. all_defined \<tau> x) \<longrightarrow>
-                (let img = op ` (\<lambda>a \<tau>. a); set' = F; f = \<lambda>x. x
+                (let img = (`) (\<lambda>a \<tau>. a); set' = F; f = \<lambda>x. x
                  in (\<forall>\<tau>. f ` set' = img \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (x \<tau>)\<rceil>\<rceil>) \<longrightarrow> Finite_Set.fold (\<lambda>j r2. r2->including\<^sub>S\<^sub>e\<^sub>t(f j)) Set{} set' = x) \<Longrightarrow>
             \<forall>xa. (\<forall>\<tau>. all_defined \<tau> xa) \<longrightarrow>
-                 (let img = op ` (\<lambda>a \<tau>. a); set' = insert x F; f = \<lambda>x. x
+                 (let img = (`) (\<lambda>a \<tau>. a); set' = insert x F; f = \<lambda>x. x
                   in (\<forall>\<tau>. f ` set' = img \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (xa \<tau>)\<rceil>\<rceil>) \<longrightarrow> Finite_Set.fold (\<lambda>j r2. r2->including\<^sub>S\<^sub>e\<^sub>t(f j)) Set{} set' = xa)"
   apply(simp only: Let_def image_ident)
 
@@ -1576,10 +1552,10 @@ proof -
               (\<forall>\<tau>. f ` set' = img \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (S' \<tau>)\<rceil>\<rceil>) \<longrightarrow>
               (Finite_Set.fold (\<lambda>j r2. r2->including\<^sub>S\<^sub>e\<^sub>t(f j)) Set{} set') = S')"
   apply(rule allI)
-  proof - fix S' :: "('\<AA>, _) Set" show "(\<forall>\<tau>. all_defined \<tau> S') \<longrightarrow> (let img = op ` (\<lambda>a \<tau>. a); set' = img \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (S \<tau>)\<rceil>\<rceil>; f = \<lambda>x. x
+  proof - fix S' :: "('\<AA>, _) Set" show "(\<forall>\<tau>. all_defined \<tau> S') \<longrightarrow> (let img = (`) (\<lambda>a \<tau>. a); set' = img \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (S \<tau>)\<rceil>\<rceil>; f = \<lambda>x. x
            in (\<forall>\<tau>. f ` set' = img \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (S' \<tau>)\<rceil>\<rceil>) \<longrightarrow> Finite_Set.fold (\<lambda>j r2. r2->including\<^sub>S\<^sub>e\<^sub>t(f j)) Set{} set' = S')"
    apply(simp add: Let_def, rule impI)
-   apply(subgoal_tac "(let img = op ` (\<lambda>a \<tau>. a); set' = (\<lambda>a \<tau>. a) ` \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (S \<tau>)\<rceil>\<rceil>; f = \<lambda>x. x
+   apply(subgoal_tac "(let img = (`) (\<lambda>a \<tau>. a); set' = (\<lambda>a \<tau>. a) ` \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (S \<tau>)\<rceil>\<rceil>; f = \<lambda>x. x
     in (\<forall>\<tau>. f ` set' = img \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (S' \<tau>)\<rceil>\<rceil>) \<longrightarrow> Finite_Set.fold (\<lambda>j r2. r2->including\<^sub>S\<^sub>e\<^sub>t(f j)) Set{} set' = S')") prefer 2
 
    apply(subst EQ_comp_fun_commute.all_int_induct[where P = "\<lambda>set.

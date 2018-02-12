@@ -335,7 +335,7 @@ definition \<open>print_examp_def_st_assoc_build_rbt_gen_typecheck check_ty f_at
                       ; find_map = \<lambda>x. fold_data_shallow
                                          (\<lambda>s. if s \<triangleq> v_null
                                                | s \<triangleq> v_invalid
-                                               | list_ex (\<lambda>OclEnum _ l \<Rightarrow> list_ex (op \<triangleq> s) l) l_enum then None
+                                               | list_ex (\<lambda>OclEnum _ l \<Rightarrow> list_ex ((\<triangleq>) s) l) l_enum then None
                                               else f s (map_username s))
                                          (\<lambda>s. f (\<open>self \<close> @@ String.natural_to_digit10 (case s of Oid n \<Rightarrow> n)) (map_self s))
                                          (\<lambda> None \<Rightarrow> id | Some x \<Rightarrow> Cons x)
@@ -724,7 +724,7 @@ definition \<open>print_examp_instance_defassoc_typecheck_gen l_ocli env =
                   , ty1' \<triangleq> ty1))
               (if name \<triangleq> ty1 then
                  ty1 # l
-               else if list_ex (op \<triangleq> ty1) l then
+               else if list_ex ((\<triangleq>) ty1) l then
                  l
                else
                  [])

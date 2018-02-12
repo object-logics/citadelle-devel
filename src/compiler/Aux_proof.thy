@@ -176,7 +176,7 @@ lemma "m2_of_m1 (m1_of_m2 X) = X"
  apply(case_tac X, simp)
  proof -
   fix t2_ext attr_own
-  def P \<equiv> "\<lambda>X. m2_of_m1 (m1_of_m2 X) = X"
+  define P where "P \<equiv> \<lambda>X. m2_of_m1 (m1_of_m2 X) = X"
   show "m2_of_m1 (m1_of_m2 (T2 t2_ext attr_own)) = T2 t2_ext attr_own"
    apply(rule t2_ext_t2_induct[ of "\<lambda>t2_ext. \<forall>attr_own. P (T2 t2_ext attr_own)"
                                    "\<lambda>recurse. \<forall>attr_own. P (T2 (T2_ext_rec recurse) attr_own)"
@@ -197,8 +197,8 @@ lemma "m2_of_m1 (m1_of_m2 X) = X"
     apply(case_tac t2_ext, simp, simp)
     apply(subst (asm) m2_of_m1_def, subst (asm) m1_of_m2_def, simp)
     proof -
-    def P \<equiv> "\<lambda>recurse. (case recurse of R ide m2 \<Rightarrow> T2_ext_rec (R ide (m2_of_m1_ext (case recurse of R xa x \<Rightarrow> get2_oid x) (case recurse of R xa x \<Rightarrow> get2_inh x) (m1_ext_of_m2 m2)))) =
-           T2_ext_rec recurse"
+    define P where "P \<equiv> \<lambda>recurse. (case recurse of R ide m2 \<Rightarrow> T2_ext_rec (R ide (m2_of_m1_ext (case recurse of R xa x \<Rightarrow> get2_oid x) (case recurse of R xa x \<Rightarrow> get2_inh x) (m1_ext_of_m2 m2)))) =
+                                  T2_ext_rec recurse"
     fix recurse
     show "P recurse"
      apply(rule t2_ext_t2_induct[ of "\<lambda>t2_ext. \<forall>nat attr_own. P (R nat (T2 t2_ext attr_own))"

@@ -15,14 +15,15 @@ sig
   val is_proof: state -> bool
   val is_skipped_proof: state -> bool
   val level: state -> int
-  val presentation_context_of: state -> Proof.context
-  val previous_context_of: state -> Proof.context option
+  val previous_theory_of: state -> theory option
   val context_of: state -> Proof.context
   val generic_theory_of: state -> generic_theory
   val theory_of: state -> theory
   val proof_of: state -> Proof.state
   val proof_position_of: state -> int
   val end_theory: Position.T -> state -> theory
+  val presentation_context: state -> Proof.context
+  val presentation_state: Proof.context -> state
   val pretty_context: state -> Pretty.T list
   val pretty_state: state -> Pretty.T list
   val string_of_state: state -> string
@@ -117,19 +118,18 @@ fun cases_node f _ (Theory (gthy, _)) = f gthy
   | cases_node _ g (Proof (prf, _)) = g (Proof_Node.current prf)
   | cases_node f _ (Skipped_Proof (_, (gthy, _))) = f gthy;
 
-val context_node = cases_node Context.proof_of Proof.context_of;
-
 
 (* datatype state *)
 
 datatype state = State of node option * node option *
                           (node option * node option);  (*current, previous, backup*)
 
-fun theory_toplevel thy = 
-  let val n = SOME (Theory (Context.Theory thy, NONE))
-  in State (n, NONE, (n, NONE)) end;
+fun State' (n1, n2) = State (n1, n2, (n1, n2))
 
-val toplevel = State (NONE, NONE, (NONE, NONE));
+fun theory_toplevel thy = 
+  State' (SOME (Theory (Context.Theory thy, NONE)), NONE);
+
+val toplevel = State' (NONE, NONE);
 
 fun is_toplevel (State (NONE, _, _)) = true
   | is_toplevel _ = false;
@@ -159,14 +159,9 @@ fun is_skipped_proof state = not (is_toplevel state) andalso skipped_proof_node 
 
 fun node_case f g state = cases_node f g (node_of state);
 
-fun presentation_context_of state =
-  (case try node_of state of
-    SOME (Theory (_, SOME ctxt)) => ctxt
-  | SOME node => context_node node
-  | NONE => raise UNDEF);
-
-fun previous_context_of (State (_, NONE, _)) = NONE
-  | previous_context_of (State (_, SOME prev, _)) = SOME (context_node prev);
+fun previous_theory_of (State (_, NONE, _)) = NONE
+  | previous_theory_of (State (_, SOME prev, _)) =
+      SOME (cases_node Context.theory_of Proof.theory_of prev);
 
 val context_of = node_case Context.proof_of Proof.context_of;
 val generic_theory_of = node_case I (Context.Proof o Proof.context_of);
@@ -183,6 +178,30 @@ fun end_theory _ (State (NONE, SOME (Theory (Context.Theory thy, _)), _)) = thy
   | end_theory pos (State (SOME _, _, _)) = error ("Unfinished theory" ^ Position.here pos);
 
 
+(* presentation context *)
+
+structure Presentation_State = Proof_Data
+(
+  type T = state option;
+  fun init _ = NONE;
+);
+
+fun presentation_context state =
+  (case try node_of state of
+    SOME (Theory (_, SOME ctxt)) => ctxt
+  | SOME node => cases_node Context.proof_of Proof.context_of node
+  | NONE =>
+      (case try Theory.get_pure () of
+        SOME thy => Proof_Context.init_global thy
+      | NONE => raise UNDEF))
+  |> Presentation_State.put (SOME state);
+
+fun presentation_state ctxt =
+  (case Presentation_State.get ctxt of
+    NONE => State' (SOME (Theory (Context.Proof ctxt, SOME ctxt)), NONE)
+  | SOME state => state);
+
+
 (* print state *)
 
 fun pretty_context state =
@@ -194,7 +213,7 @@ fun pretty_context state =
           (case node of
             Theory (gthy, _) => gthy
           | Proof (_, (_, gthy)) => gthy
-          | Skipped_Proof (_, (gthy, _)) => gthy);
+          | Skipped_Proof (_, (_, gthy)) => gthy);
         val lthy = Context.cases (Named_Target.theory_init) I gthy;
       in Local_Theory.pretty lthy end);
 
@@ -474,7 +493,8 @@ fun begin_proof init = transaction (fn int =>
   (fn Theory (gthy, _) =>
     let
       val (finish, prf) = init int gthy;
-      val skip = Goal.skip_proofs_enabled ();
+      val document = Options.default_string "document";
+      val skip = (document = "" orelse document = "false") andalso Goal.skip_proofs_enabled ();
       val schematic_goal = try Proof.schematic_goal prf;
       val _ =
         if skip andalso schematic_goal = SOME true then
@@ -593,11 +613,11 @@ fun app int (tr as Transition {trans, ...}) =
     in (result, Option.map (fn UNDEF => ERROR (type_error tr) | exn => exn) opt_err) end);
 
 fun state_load (Transition {read_write = (read, _), ...}) (st as State (_, _, (nd1, nd0))) =
-  case read of Load_backup => State (nd1, nd0, (nd1, nd0))
+  case read of Load_backup => State' (nd1, nd0)
              | Load_previous => st
 
 fun state_store (Transition {read_write = (_, write), ...}) (st as State (nd1, nd0, _)) =
-  case write of Store_backup => State (nd1, nd0, (nd1, nd0))
+  case write of Store_backup => State' (nd1, nd0)
               | Store_default => st
 
 in
@@ -606,7 +626,7 @@ fun transition int tr st =
   let
     val st = state_load tr st
     val (st', opt_err) =
-      Context.setmp_generic_context (try (Context.Proof o presentation_context_of) st)
+      Context.setmp_generic_context (try (Context.Proof o presentation_context) st)
         (fn () => app int tr st) ();
     val opt_err' = opt_err |> Option.map
       (fn Runtime.EXCURSION_FAIL exn_info => exn_info
@@ -730,7 +750,7 @@ fun element_result keywords (Thy_Syntax.Element (tr, NONE)) st = atom_result key
                       val (result, result_state) =
                         State (SOME (Proof (prf', (finish, orig_gthy))), prev, backup)
                         |> fold_map (element_result keywords) body_elems ||> command end_tr;
-                    in (Result_List result, presentation_context_of result_state) end))
+                    in (Result_List result, presentation_context result_state) end))
               #> (fn (res, state') => state' |> put_result (Result_Future res));
 
             val forked_proof =
@@ -743,7 +763,7 @@ fun element_result keywords (Thy_Syntax.Element (tr, NONE)) st = atom_result key
               |> command (head_tr |> reset_trans |> forked_proof);
             val end_result = Result (end_tr, st'');
             val result =
-              Result_List [head_result, Result.get (presentation_context_of st''), end_result];
+              Result_List [head_result, Result.get (presentation_context st''), end_result];
           in (result, st'') end
       end;
 

@@ -448,7 +448,7 @@ definition "class_unflat' x =
                        | Some tree \<Rightarrow> tree)"
 
 fun nb_class where
-   "nb_class e = (\<lambda> ToyClass _ _ l \<Rightarrow> Suc (List.fold (op + o nb_class) l 0)) e"
+   "nb_class e = (\<lambda> ToyClass _ _ l \<Rightarrow> Suc (List.fold ((+) o nb_class) l 0)) e"
 
 definition "apply_optim_ass_arity ty_obj v =
   (if TyObj_ass_arity ty_obj \<le> 2 then None

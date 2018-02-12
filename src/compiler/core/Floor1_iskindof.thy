@@ -109,7 +109,7 @@ definition "print_iskindof_lemma_cp = start_m'3_gen O.lemma
       else
       ( [ [ lem_simp1 ]
         , [ M.plus
-            [ M.rule (T.where (T.thm \<open>cpI2\<close>) [(\<open>f\<close>, Term_preunary (Term_basic [\<open>op\<close>]) (Term_basic [\<open>or\<close>]))])
+            [ M.rule (T.where (T.thm \<open>cpI2\<close>) [(\<open>f\<close>, Term_parenthesis (Term_basic [\<open>or\<close>]))])
             , M.plus [M.rule (T.thm \<open>allI\<close>)]
             , M.rule (T.thm \<open>cp_OclOr\<close>) ]]
         , [ lem_simp2 ] ]
@@ -283,11 +283,11 @@ and aux\<^sub>b\<^sub>r\<^sub>e\<^sub>a\<^sub>d\<^sub>t\<^sub>h where
      (\<lambda> [] \<Rightarrow> tactic
       | (class0, class0_path_inh) # l\<^sub>b\<^sub>r\<^sub>e\<^sub>a\<^sub>d\<^sub>t\<^sub>h \<Rightarrow>
          M_erule (class, class0 # map fst l\<^sub>b\<^sub>r\<^sub>e\<^sub>a\<^sub>d\<^sub>t\<^sub>h)
-         # (if l\<^sub>b\<^sub>r\<^sub>e\<^sub>a\<^sub>d\<^sub>t\<^sub>h = [] then op # M_simp\<^sub>b\<^sub>r\<^sub>e\<^sub>a\<^sub>d\<^sub>t\<^sub>h else id)
+         # (if l\<^sub>b\<^sub>r\<^sub>e\<^sub>a\<^sub>d\<^sub>t\<^sub>h = [] then (#) M_simp\<^sub>b\<^sub>r\<^sub>e\<^sub>a\<^sub>d\<^sub>t\<^sub>h else id)
            (aux\<^sub>b\<^sub>r\<^sub>e\<^sub>a\<^sub>d\<^sub>t\<^sub>h
               class
               ( (if class0_path_inh then
-                   (if l\<^sub>d\<^sub>e\<^sub>p\<^sub>t\<^sub>h = [] then op # M_simp\<^sub>d\<^sub>e\<^sub>p\<^sub>t\<^sub>h\<^sub>_\<^sub>1 else id)
+                   (if l\<^sub>d\<^sub>e\<^sub>p\<^sub>t\<^sub>h = [] then (#) M_simp\<^sub>d\<^sub>e\<^sub>p\<^sub>t\<^sub>h\<^sub>_\<^sub>1 else id)
                    (aux\<^sub>d\<^sub>e\<^sub>p\<^sub>t\<^sub>h l\<^sub>d\<^sub>e\<^sub>p\<^sub>t\<^sub>h)
                  else [M_simp\<^sub>d\<^sub>e\<^sub>p\<^sub>t\<^sub>h\<^sub>_\<^sub>2])
                @ tactic)

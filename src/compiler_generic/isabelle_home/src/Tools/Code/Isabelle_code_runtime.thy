@@ -80,10 +80,6 @@ fun compile_ML verbose code context =
 
 
 
-(** full static evaluation -- still with limited coverage! **)
-
-
-
 (** generator for computations -- partial implementations of the universal morphism from Isabelle to ML terms **)
 
 (* auxiliary *)
@@ -253,6 +249,9 @@ val _ =
       (code_reflect_cmd all_public raw_datatypes raw_functions module_name some_file)));
 
 end; (*local*)
+
+
+(** using external SML files as substitute for proper definitions -- only for polyml!  **)
 
 end
 *}

@@ -548,11 +548,12 @@ fun thm top (Thm thm) = #keep top (fn state =>
 fun interpretation1 n loc_n loc_param =
   Interpretation.interpretation_cmd ( [ ( (To_string0 loc_n, Position.none)
                                         , ( (To_string0 n, true)
-                                          , if loc_param = [] then
-                                              Expression.Named []
-                                            else
-                                              Expression.Positional (map (SOME o of_semi__term)
-                                                                         loc_param)))]
+                                          , ( if loc_param = [] then
+                                                Expression.Named []
+                                              else
+                                                Expression.Positional (map (SOME o of_semi__term)
+                                                                           loc_param)
+                                            , [])))]
                                     , [])
                                     []
 end
@@ -606,14 +607,14 @@ fun semi__theory (top : ('transitionM, 'transitionM, 'state) toplevel) = let ope
         @{command_keyword section} | 1 =>
         @{command_keyword subsection} | _ =>
         @{command_keyword subsubsection},
-     #tr_raw top (Thy_Output.document_command {markdown = false} (NONE, Input.string (To_string0 s))))
+     #tr_raw top (Pure_Syn.document_command {markdown = false} (NONE, Input.string (To_string0 s))))
   |>:: (@{command_keyword print_syntax}, #keep top (Cmd.section n s)) end
 | Theory_text (Text s) =>
   cons (@{command_keyword text},
-     #tr_raw top (Thy_Output.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
+     #tr_raw top (Pure_Syn.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
 | Theory_text_raw (Text_raw s) =>
   cons (@{command_keyword text_raw},
-     #tr_raw top (Thy_Output.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
+     #tr_raw top (Pure_Syn.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
 | Theory_ML ml =>
   cons (@{command_keyword ML}, Cmd.ml top ml)
 | Theory_setup setup =>
@@ -1093,13 +1094,8 @@ fun export_code_cmd' seris tmp_export_code f_err raw_cs thy =
           end) seris
       end)
 
-fun scan thy pos str =
-  Symbol.explode str
-  |> Source.of_list
-  |> Token.source (Thy_Header.get_keywords' thy) pos
-  |> Source.exhaust;
-
-fun mk_term ctxt s = fst (Scan.pass (Context.Proof ctxt) Args.term (scan ctxt Position.none s))
+fun mk_term ctxt s =
+  fst (Scan.pass (Context.Proof ctxt) Args.term (Token.explode0 (Thy_Header.get_keywords' ctxt) s))
 
 fun mk_free ctxt s l =
   let val t_s = mk_term ctxt s in
