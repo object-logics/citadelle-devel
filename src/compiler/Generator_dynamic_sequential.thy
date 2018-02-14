@@ -1494,15 +1494,15 @@ fun thy_shallow get_all_meta_embed =
               in disp_time (aux (env, thy)) (get_all_meta_embed (SOME thy)) end
         in ((env, thy0), thy) end))
 
-fun thy_switch (*pos1 pos2*) f mode tr =
+fun thy_switch \<^cancel>\<open>pos1 pos2\<close> f mode tr =
   ( ( mode
-    , (*Toplevel'.keep
+    , \<^cancel>\<open>Toplevel'.keep
         (fn _ => Output.information ( "Theory required while transitions were being built"
                                     ^ Position.here pos1
                                     ^ ": Commands will not be concurrently considered. "
                                     ^ Markup.markup
                                         (Markup.properties (Position.properties_of pos2) Markup.position)
-                                        "(Handled here\<here>)"))*) tr)
+                                        "(Handled here\<here>)"))\<close> tr)
   , f #~> Generation_mode.Data_gen.put)
 
 in
@@ -1526,7 +1526,7 @@ fun outer_syntax_commands'' mk_string cmd_spec cmd_descr parser get_all_meta_emb
                                            (case n of NONE => thy
                                                     | SOME n => Config.put_global ML_Print_Depth.print_depth n thy))
                                          name)))))
-      in (*let
+      in \<^cancel>\<open>let
            val l_obj = get_all_m NONE
              (* In principle, we could provide (SOME thy) here,
                 but this would only mostly work if we are evaluating a generated (not modified) file,
@@ -1581,7 +1581,7 @@ fun outer_syntax_commands'' mk_string cmd_spec cmd_descr parser get_all_meta_emb
               m_tr |-> thy_switch pos \<^here> (thy_shallow get_all_m)
          end
          handle THY_REQUIRED pos =>
-           *)m_tr |-> thy_switch (*pos \<^here>*) (thy_deep get_all_m #~> thy_shallow get_all_m)
+           \<close>m_tr |-> thy_switch \<^cancel>\<open>pos \<^here>\<close> (thy_deep get_all_m #~> thy_shallow get_all_m)
       end
       |> uncurry Toplevel'.setup_theory))
  end
