@@ -84,15 +84,11 @@ type defined for the corresponding object representations as follows: \<close>
 
 (* 15 ************************************ 13 + 2 *)  (* term Floor1_infra.print_infra_datatype_class_1 *)
 datatype ty\<E>\<X>\<T>\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y = mk\<E>\<X>\<T>\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y "oid"
-
 datatype ty\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y = mk\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y "ty\<E>\<X>\<T>\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y"
-
 
 (* 16 ************************************ 15 + 2 *)  (* term Floor1_infra.print_infra_datatype_class_2 *)
 datatype ty2\<E>\<X>\<T>\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y = mk2\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y 
-
 datatype ty2oid\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y = mk2oid\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y "oid" "ty2\<E>\<X>\<T>\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y"
-
 
 (* 17 ************************************ 17 + 2 *)  (* term Floor1_infra.print_infra_datatype_equiv_2of1 *)
 definition "class_ty_ext_equiv_2of1_aux\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y = (\<lambda>oid. (\<lambda> (mk2\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y ) \<Rightarrow> (mk\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y ((mk\<E>\<X>\<T>\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y (oid))))))"
@@ -111,7 +107,6 @@ for all respective type-variables. \<close>
 
 (* 20 ************************************ 23 + 1 *)  (* term Floor1_infra.print_infra_datatype_universe *)
 datatype \<AA> = in\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y "ty\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y"
-
 
 (* 21 ************************************ 24 + 1 *)
 text \<open>
@@ -600,40 +595,27 @@ atomic_old_datatype Position = Position "int" "string" "int" "int"
                         | NoPosition 
                         | BuiltinPosition 
                         | InternalPosition 
-
 type_synonym PosLength = "(Position, int) Product_Type.prod"
 atomic_old_datatype Name = Name "int"
-
 atomic_old_datatype NodeInfo = OnlyPos "Position" "PosLength"
                         | NodeInfo "Position" "PosLength" "Name"
-
 atomic_old_datatype Ident = Ident "string" "int" "NodeInfo"
-
 atomic_old_datatype SUERef = AnonymousRef "Name"
                         | NamedRef "Ident"
-
 atomic_old_datatype CChar = CChar "char" "HOL.bool"
                         | CChars "char List.list" "HOL.bool"
-
 atomic_old_datatype CIntRepr = DecRepr 
                         | HexRepr 
                         | OctalRepr 
-
 atomic_old_datatype CIntFlag = FlagUnsigned 
                         | FlagLong 
                         | FlagLongLong 
                         | FlagImag 
-
 atomic_old_datatype CFloat = CFloat "string"
-
 atomic_old_datatype ClangCVersion = ClangCVersion "string"
-
 atomic_old_datatype CString = CString "string" "HOL.bool"
-
 atomic_old_datatype 'f Flags = Flags "int"
-
 atomic_old_datatype CInteger = CInteger "int" "CIntRepr" "CIntFlag Flags"
-
 atomic_old_datatype CAssignOp = CAssignOp 
                         | CMulAssOp 
                         | CDivAssOp 
@@ -645,7 +627,6 @@ atomic_old_datatype CAssignOp = CAssignOp
                         | CAndAssOp 
                         | CXorAssOp 
                         | COrAssOp 
-
 atomic_old_datatype CBinaryOp = CMulOp 
                         | CDivOp 
                         | CRmdOp 
@@ -664,7 +645,6 @@ atomic_old_datatype CBinaryOp = CMulOp
                         | COrOp 
                         | CLndOp 
                         | CLorOp 
-
 atomic_old_datatype CUnaryOp = CPreIncOp 
                         | CPreDecOp 
                         | CPostIncOp 
@@ -675,30 +655,24 @@ atomic_old_datatype CUnaryOp = CPreIncOp
                         | CMinOp 
                         | CCompOp 
                         | CNegOp 
-
 atomic_old_datatype 'a CStorageSpecifier = CAuto "'a"
                         | CRegister "'a"
                         | CStatic "'a"
                         | CExtern "'a"
                         | CTypedef "'a"
                         | CThread "'a"
-
 type_synonym CStorageSpec = "NodeInfo CStorageSpecifier"
 atomic_old_datatype 'a CFunctionSpecifier = CInlineQual "'a"
                         | CNoreturnQual "'a"
-
 type_synonym CFunSpec = "NodeInfo CFunctionSpecifier"
 atomic_old_datatype CStructTag = CStructTag 
                         | CUnionTag 
-
 atomic_old_datatype 'a CConstant = CIntConst "CInteger" "'a"
                         | CCharConst "CChar" "'a"
                         | CFloatConst "CFloat" "'a"
                         | CStrConst "CString" "'a"
-
 type_synonym CConst = "NodeInfo CConstant"
 atomic_old_datatype 'a CStringLiteral = CStrLit "CString" "'a"
-
 atomic_old_datatype 'a CFunctionDef = CFunDef "'a CDeclarationSpecifier List.list" "'a CDeclarator" "'a CDeclaration List.list" "'a CStatement" "'a"
 and 'a CDeclaration = CDecl "'a CDeclarationSpecifier List.list" "(('a CDeclarator C_Model_init.option, 'a CInitializer C_Model_init.option) Product_Type.prod, 'a CExpression C_Model_init.option) Product_Type.prod List.list" "'a"
                         | CStaticAssert "'a CExpression" "'a CStringLiteral" "'a"
@@ -798,9 +772,7 @@ type_synonym 'a CInitializerList = "('a CPartDesignator List.list, 'a CInitializ
 atomic_old_datatype 'a CExternalDeclaration = CDeclExt "'a CDeclaration"
                         | CFDefExt "'a CFunctionDef"
                         | CAsmExt "'a CStringLiteral" "'a"
-
 atomic_old_datatype 'a CTranslationUnit = CTranslUnit "'a CExternalDeclaration List.list" "'a"
-
 type_synonym CTranslUnit = "NodeInfo CTranslationUnit"
 type_synonym CExtDecl = "NodeInfo CExternalDeclaration"
 type_synonym CFunDef = "NodeInfo CFunctionDef"
