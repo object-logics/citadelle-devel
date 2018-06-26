@@ -84,7 +84,7 @@ we basically have two options:
 The generated file can interactively be loaded in Isabelle/jEdit, or saved to the hard disk.
 This mode is called the ``deep exportation'' mode or shortly the ``deep'' mode.
 The aim is to maximally automate the process one is manually performing in
-@{file "Generator_static.thy"}.
+\<^file>\<open>Generator_static.thy\<close>.
 \item On the other hand, it is also possible to directly execute
 in Isabelle/jEdit the generated file from the random access memory.
 This mode corresponds to the ``shallow reflection'' mode or shortly ``shallow'' mode.
@@ -96,7 +96,7 @@ without leaving the editing session, in the same as the one the meta-compiler is
 
 apply_code_printing_reflect \<open>
   val stdout_file = Unsynchronized.ref ""
-\<close> text\<open>This variable is not used in this theory (only in @{file "Generator_static.thy"}),
+\<close> text\<open>This variable is not used in this theory (only in \<^file>\<open>Generator_static.thy\<close>),
        but needed for well typechecking the reflected SML code.\<close>
 
 code_reflect' open META
@@ -163,7 +163,7 @@ structure From = struct
  end
 
  fun read_term thy expr =
-   META.T_pure (Pure.term (Syntax.read_term (get_thy @{here} Proof_Context.init_global thy) expr), SOME (string expr))
+   META.T_pure (Pure.term (Syntax.read_term (get_thy \<^here> Proof_Context.init_global thy) expr), SOME (string expr))
 end
 \<close>
 
@@ -174,10 +174,10 @@ fun out_intensify' tps fmt = out_intensify (Timing.message (Timing.result tps) |
 
 structure Toplevel' = struct
   fun keep_theory f = Toplevel.keep (f o Toplevel.theory_of)
-  fun keep f tr = (@{command_keyword print_syntax}, Toplevel.keep f) :: tr
-  fun read_write_keep rw = (@{command_keyword print_syntax}, fn tr => tr |> Toplevel.read_write rw |> Toplevel.keep (K ()))
-  fun setup_theory (res, tr) f = rev ((@{command_keyword setup}, Toplevel.theory (f res)) :: tr)
-  fun keep_output tps fmt msg = cons (@{command_keyword print_syntax}, Toplevel.keep (fn _ => out_intensify' tps fmt msg))
+  fun keep f tr = (\<^command_keyword>\<open>print_syntax\<close>, Toplevel.keep f) :: tr
+  fun read_write_keep rw = (\<^command_keyword>\<open>print_syntax\<close>, fn tr => tr |> Toplevel.read_write rw |> Toplevel.keep (K ()))
+  fun setup_theory (res, tr) f = rev ((\<^command_keyword>\<open>setup\<close>, Toplevel.theory (f res)) :: tr)
+  fun keep_output tps fmt msg = cons (\<^command_keyword>\<open>print_syntax\<close>, Toplevel.keep (fn _ => out_intensify' tps fmt msg))
 end
 
 structure Resources' = struct
@@ -370,27 +370,27 @@ fun then_tactic l = let open Method in
 end
 
 fun terminal_proof0 f1 f2 f3 top o_by = let open META in case o_by of
-   Command_done =>       (@{command_keyword done}, #dual top { par = Isar_Cmd.done_proof
-                                                             , seq = f1 })
- | Command_sorry =>      (@{command_keyword sorry}, #dual top { par = Isar_Cmd.skip_proof
-                                                              , seq = f2 true })
- | Command_by l_apply => (@{command_keyword by}, let val (m1, m2) = (then_tactic l_apply, NONE) in
-                                                 #pr_report top m1
-                                                   (#pr_report_o top m2
-                                                     (#dual top { par = Isar_Cmd.terminal_proof (m1, m2)
-                                                                , seq = f3 (m1, m2) })) end)
+   Command_done =>       (\<^command_keyword>\<open>done\<close>, #dual top { par = Isar_Cmd.done_proof
+                                                            , seq = f1 })
+ | Command_sorry =>      (\<^command_keyword>\<open>sorry\<close>, #dual top { par = Isar_Cmd.skip_proof
+                                                             , seq = f2 true })
+ | Command_by l_apply => (\<^command_keyword>\<open>by\<close>, let val (m1, m2) = (then_tactic l_apply, NONE) in
+                                                #pr_report top m1
+                                                  (#pr_report_o top m2
+                                                    (#dual top { par = Isar_Cmd.terminal_proof (m1, m2)
+                                                               , seq = f3 (m1, m2) })) end)
 end
 
 fun terminal_proof_dual top =
   terminal_proof0 Proof.local_done_proof Proof.local_skip_proof Proof.local_terminal_proof top
 
 fun proof_show_gen top f (thes, thes_when) st = st
-  |>:: (@{command_keyword proof},
+  |>:: (\<^command_keyword>\<open>proof\<close>,
       let val m = SOME ( Method.Source [Token.make_string ("-", Position.none)]
                        , (Position.none, Position.none)) in
       (#pr_report_o top m (#proofs top (Proof.proof m))) end)
   |> f
-  |>:: (@{command_keyword show}, #proof' top (fn int => Proof.show_cmd
+  |>:: (\<^command_keyword>\<open>show\<close>, #proof' top (fn int => Proof.show_cmd
        (thes_when = [])
        NONE
        (K I)
@@ -400,7 +400,7 @@ fun proof_show_gen top f (thes, thes_when) st = st
        int #> #2))
 
 fun semi__command_state top (META.Command_apply_end l) = let open META_overload in
-  cons (@{command_keyword apply_end}, let val m = then_tactic l in
+  cons (\<^command_keyword>\<open>apply_end\<close>, let val m = then_tactic l in
     #pr_report top m (#proofs top (Proof.apply_end m)) end)
 end
 
@@ -408,29 +408,29 @@ fun semi__command_proof top = let open META_overload
   val thesis = "?thesis"
   fun cons_proof_show f = proof_show_gen top f (thesis, [])
   fun cons_let (e1, e2) =
-        cons (@{command_keyword let}, #proof top
+        cons (\<^command_keyword>\<open>let\<close>, #proof top
           (Proof.let_bind_cmd [([of_semi__term e1], of_semi__term e2)])) in
   fn META.Command_apply l =>
-        cons (@{command_keyword apply}, let val m = then_tactic l in
+        cons (\<^command_keyword>\<open>apply\<close>, let val m = then_tactic l in
           #pr_report top m (#proofs top (Proof.apply m)) end)
    | META.Command_using l =>
-        cons (@{command_keyword using}, #proof top (fn st =>
+        cons (\<^command_keyword>\<open>using\<close>, #proof top (fn st =>
           Proof.using [map (fn s => ([s], [])) (semi__thm_mult_l (Proof.context_of st) l)] st))
    | META.Command_unfolding l =>
-        cons (@{command_keyword unfolding}, #proof top (fn st =>
+        cons (\<^command_keyword>\<open>unfolding\<close>, #proof top (fn st =>
           Proof.unfolding [map (fn s => ([s], [])) (semi__thm_mult_l (Proof.context_of st) l)] st))
    | META.Command_let e =>
         cons_proof_show (cons_let e)
    | META.Command_have (n, b, e, e_pr) => (fn st => st
      |> cons_proof_show (fn st => st
-       |>:: (@{command_keyword have}, #proof' top (fn int =>
+       |>:: (\<^command_keyword>\<open>have\<close>, #proof' top (fn int =>
           Proof.have_cmd true NONE (K I) [] []
             [( (To_sbinding n, if b then [[Token.make_string ("simp", Position.none)]] else [])
              , [(of_semi__term e, [])])] int #> #2))
        |>:: terminal_proof_dual top e_pr))
    | META.Command_fix_let (l, l_let, o_exp, _) => (fn st => st
      |> proof_show_gen top (fn st => st
-       |>:: (@{command_keyword fix}, #proof top
+       |>:: (\<^command_keyword>\<open>fix\<close>, #proof top
             (Proof.fix_cmd (List.map (fn i => (To_sbinding i, NONE, NoSyn)) l)))
        |> fold cons_let l_let)
           ( case o_exp of NONE => thesis | SOME (l_spec, _) =>
@@ -440,8 +440,8 @@ fun semi__command_proof top = let open META_overload
 end
 
 fun end' top =
- (@{command_keyword end}, #tr_raw top (Toplevel.exit o Toplevel.end_local_theory o Toplevel.close_target o
-                                       Toplevel.end_proof (K Proof.end_notepad)))
+ (\<^command_keyword>\<open>end\<close>, #tr_raw top (Toplevel.exit o Toplevel.end_local_theory o Toplevel.close_target o
+                                      Toplevel.end_proof (K Proof.end_notepad)))
 
 structure Cmd = struct open META open META_overload
 fun input_source ml = Input.source false (of_semi__term' ml) (Position.none, Position.none)
@@ -566,33 +566,33 @@ structure Command_Transition = struct
 fun semi__theory (top : ('transitionM, 'transitionM, 'state) toplevel) = let open META open META_overload
  in (*let val f = *)fn
   Theory_datatype datatype' =>
-  cons (@{command_keyword datatype}, Cmd.datatype' top datatype')
+  cons (\<^command_keyword>\<open>datatype\<close>, Cmd.datatype' top datatype')
 | Theory_type_synonym type_synonym => (*Toplevel.local_theory*)
-  cons (@{command_keyword type_synonym}, Cmd.type_synonym top type_synonym)
+  cons (\<^command_keyword>\<open>type_synonym\<close>, Cmd.type_synonym top type_synonym)
 | Theory_type_notation type_notation =>
-  cons (@{command_keyword type_notation}, Cmd.type_notation top type_notation)
+  cons (\<^command_keyword>\<open>type_notation\<close>, Cmd.type_notation top type_notation)
 | Theory_instantiation (Instantiation (n, n_def, expr)) => let val name = To_string0 n in fn acc => acc
-  |>:: (@{command_keyword instantiation}, #begin_local_theory top true (Cmd.instantiation1 name))
-  |>:: (@{command_keyword definition}, #local_theory' top NONE NONE (#2 oo Cmd.instantiation2 name n_def expr))
-  |>:: (@{command_keyword instance}, #local_theory_to_proof top NONE NONE (Class.instantiation_instance I))
-  |>:: (@{command_keyword ".."}, #tr_raw top Isar_Cmd.default_proof)
+  |>:: (\<^command_keyword>\<open>instantiation\<close>, #begin_local_theory top true (Cmd.instantiation1 name))
+  |>:: (\<^command_keyword>\<open>definition\<close>, #local_theory' top NONE NONE (#2 oo Cmd.instantiation2 name n_def expr))
+  |>:: (\<^command_keyword>\<open>instance\<close>, #local_theory_to_proof top NONE NONE (Class.instantiation_instance I))
+  |>:: (\<^command_keyword>\<open>..\<close>, #tr_raw top Isar_Cmd.default_proof)
   |>:: end' top end
 | Theory_overloading (Overloading (n_c, e_c, n, e)) => (fn acc => acc
-  |>:: (@{command_keyword overloading}, #begin_local_theory top true (Cmd.overloading1 n_c e_c))
-  |>:: (@{command_keyword definition}, #local_theory' top NONE NONE (Cmd.overloading2 n e))
+  |>:: (\<^command_keyword>\<open>overloading\<close>, #begin_local_theory top true (Cmd.overloading1 n_c e_c))
+  |>:: (\<^command_keyword>\<open>definition\<close>, #local_theory' top NONE NONE (Cmd.overloading2 n e))
   |>:: end' top)
 | Theory_consts consts =>
-  cons (@{command_keyword consts}, Cmd.consts top consts)
+  cons (\<^command_keyword>\<open>consts\<close>, Cmd.consts top consts)
 | Theory_definition definition =>
-  cons (@{command_keyword definition}, Cmd.definition top definition)
+  cons (\<^command_keyword>\<open>definition\<close>, Cmd.definition top definition)
 | Theory_lemmas lemmas =>
-  cons (@{command_keyword lemmas}, Cmd.lemmas top lemmas)
+  cons (\<^command_keyword>\<open>lemmas\<close>, Cmd.lemmas top lemmas)
 | Theory_lemma (Lemma (n, l_spec, l_apply, o_by)) => (fn acc => acc
-  |>:: (@{command_keyword lemma}, #local_theory_to_proof' top NONE NONE (Cmd.lemma1 n l_spec))
+  |>:: (\<^command_keyword>\<open>lemma\<close>, #local_theory_to_proof' top NONE NONE (Cmd.lemma1 n l_spec))
   |> fold (semi__command_proof top o META.Command_apply) l_apply
   |>:: terminal_proof_dual top o_by)
 | Theory_lemma (Lemma_assumes (n, l_spec, concl, l_apply, o_by)) => (fn acc => acc
-  |>:: (@{command_keyword lemma}, #local_theory_to_proof' top NONE NONE (Cmd.lemma1' n l_spec concl))
+  |>:: (\<^command_keyword>\<open>lemma\<close>, #local_theory_to_proof' top NONE NONE (Cmd.lemma1' n l_spec concl))
   |> fold (semi__command_proof top) l_apply
   |> (fn st => st
     |>:: terminal_proof_dual top o_by
@@ -600,32 +600,32 @@ fun semi__theory (top : ('transitionM, 'transitionM, 'state) toplevel) = let ope
         [] => I
       | _ :: l =>
         let fun cons_qed m =
-  cons (@{command_keyword qed}, #tr_report_o top m (#tr_raw top (Isar_Cmd.qed m))) in fn st => st
+  cons (\<^command_keyword>\<open>qed\<close>, #tr_report_o top m (#tr_raw top (Isar_Cmd.qed m))) in fn st => st
         |> fold (fn l => fold (semi__command_state top) l o cons_qed NONE) l
         |> cons_qed NONE end)))
 | Theory_axiomatization axiomatization =>
-  cons (@{command_keyword axiomatization}, Cmd.axiomatization top axiomatization)
+  cons (\<^command_keyword>\<open>axiomatization\<close>, Cmd.axiomatization top axiomatization)
 | Theory_section (Section (n, s)) => let val n = To_nat n in fn st => st
   |>:: (case n of 0 =>
-        @{command_keyword section} | 1 =>
-        @{command_keyword subsection} | _ =>
-        @{command_keyword subsubsection},
+        \<^command_keyword>\<open>section\<close> | 1 =>
+        \<^command_keyword>\<open>subsection\<close> | _ =>
+        \<^command_keyword>\<open>subsubsection\<close>,
      #tr_raw top (Pure_Syn.document_command {markdown = false} (NONE, Input.string (To_string0 s))))
-  |>:: (@{command_keyword print_syntax}, #keep top (Cmd.section n s)) end
+  |>:: (\<^command_keyword>\<open>print_syntax\<close>, #keep top (Cmd.section n s)) end
 | Theory_text (Text s) =>
-  cons (@{command_keyword text},
+  cons (\<^command_keyword>\<open>text\<close>,
      #tr_raw top (Pure_Syn.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
 | Theory_text_raw (Text_raw s) =>
-  cons (@{command_keyword text_raw},
+  cons (\<^command_keyword>\<open>text_raw\<close>,
      #tr_raw top (Pure_Syn.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
 | Theory_ML ml =>
-  cons (@{command_keyword ML}, Cmd.ml top ml)
+  cons (\<^command_keyword>\<open>ML\<close>, Cmd.ml top ml)
 | Theory_setup setup =>
-  cons (@{command_keyword setup}, Cmd.setup top setup)
+  cons (\<^command_keyword>\<open>setup\<close>, Cmd.setup top setup)
 | Theory_thm thm =>
-  cons (@{command_keyword thm}, Cmd.thm top thm)
+  cons (\<^command_keyword>\<open>thm\<close>, Cmd.thm top thm)
 | Theory_interpretation (Interpretation (n, loc_n, loc_param, o_by)) => (fn st => st
-  |>:: (@{command_keyword interpretation}, #local_theory_to_proof top NONE NONE
+  |>:: (\<^command_keyword>\<open>interpretation\<close>, #local_theory_to_proof top NONE NONE
      (Cmd.interpretation1 n loc_n loc_param))
   |>:: terminal_proof_dual top o_by)
 (*in fn t => fn thy => f t thy handle ERROR s => (warning s; thy)
@@ -725,7 +725,7 @@ local
       (fn T_pure x => T_pure x
         | e =>
           let fun aux e = case e of
-            T_to_be_parsed (s, _) => SOME let val t = Syntax.read_term (get_thy @{here} Proof_Context.init_global thy)
+            T_to_be_parsed (s, _) => SOME let val t = Syntax.read_term (get_thy \<^here> Proof_Context.init_global thy)
                                                                        (To_string0 s) in
                                           (t, s, Term.add_frees t [])
                                           end
@@ -753,7 +753,7 @@ fun all_meta_tr top aux ret = fn
     (case thy of
        Theories_one thy => Command_Transition.semi__theory top thy
      | Theories_locale (data, l) => fn acc => acc
-       |>:: (@{command_keyword locale}, #begin_local_theory top true (semi__locale data))
+       |>:: (\<^command_keyword>\<open>locale\<close>, #begin_local_theory top true (semi__locale data))
        |> fold (fold (Command_Transition.semi__theory top)) l
        |>:: end' top)
 | META_boot_generation_syntax _ => ret o I
@@ -1053,7 +1053,7 @@ fun export_code_tmp_file seris g =
   fold
     (fn ((ml_compiler, ml_module), export_arg) => fn f => fn g =>
       f (fn accu =>
-        let val tmp_name = Context.theory_name @{theory} in
+        let val tmp_name = Context.theory_name \<^theory> in
         (if Deep0.Find.export_mode ml_compiler = Deep0.Export_code_env.Directory then
            Isabelle_System.with_tmp_dir tmp_name
          else
@@ -1116,7 +1116,7 @@ fun p_gen f g =  f "[" "]" g
               || f "(" ")" g
 fun paren f = p_gen (fn s1 => fn s2 => fn f => Parse.$$$ s1 |-- f --| Parse.$$$ s2) f
 fun parse_l f = Parse.$$$ "[" |-- Parse.!!! (Parse.list f --| Parse.$$$ "]")
-fun parse_l_with f = Parse.$$$ "[" |-- Scan.optional (Parse.binding --| @{keyword "with_only"} >> SOME) NONE
+fun parse_l_with f = Parse.$$$ "[" |-- Scan.optional (Parse.binding --| \<^keyword>\<open>with_only\<close> >> SOME) NONE
                      -- Parse.!!! (Parse.list f --| Parse.$$$ "]")
 fun parse_l' f = Parse.$$$ "[" |-- Parse.list f --| Parse.$$$ "]"
 fun parse_l1' f = Parse.$$$ "[" |-- Parse.list1 f --| Parse.$$$ "]"
@@ -1166,35 +1166,35 @@ structure Data_gen = Theory_Data
                         , shallow = #shallow e1 @ #shallow e2
                         , syntax_print = #syntax_print e1 @ #syntax_print e2 })
 
-val code_expr_argsP = Scan.optional (@{keyword "("} |-- Parse.args --| @{keyword ")"}) []
+val code_expr_argsP = Scan.optional (\<^keyword>\<open>(\<close> |-- Parse.args --| \<^keyword>\<open>)\<close>) []
 
 val parse_scheme =
-  @{keyword "design"} >> K META.Gen_only_design || @{keyword "analysis"} >> K META.Gen_only_analysis
+  \<^keyword>\<open>design\<close> >> K META.Gen_only_design || \<^keyword>\<open>analysis\<close> >> K META.Gen_only_analysis
 
 val parse_sorry_mode =
-  Scan.optional (  @{keyword "SORRY"} >> K (SOME META.Gen_sorry)
-                || @{keyword "no_dirty"} >> K (SOME META.Gen_no_dirty)) NONE
+  Scan.optional (  \<^keyword>\<open>SORRY\<close> >> K (SOME META.Gen_sorry)
+                || \<^keyword>\<open>no_dirty\<close> >> K (SOME META.Gen_no_dirty)) NONE
 
 val parse_deep =
-     Scan.optional (@{keyword "skip_export"} >> K true) false
-  -- Scan.optional (((Parse.$$$ "(" -- @{keyword "THEORY"}) |-- Parse.name -- ((Parse.$$$ ")"
-                   -- Parse.$$$ "(" -- @{keyword "IMPORTS"}) |-- parse_l' Parse.name -- Parse.name)
+     Scan.optional (\<^keyword>\<open>skip_export\<close> >> K true) false
+  -- Scan.optional (((Parse.$$$ "(" -- \<^keyword>\<open>THEORY\<close>) |-- Parse.name -- ((Parse.$$$ ")"
+                   -- Parse.$$$ "(" -- \<^keyword>\<open>IMPORTS\<close>) |-- parse_l' Parse.name -- Parse.name)
                    --| Parse.$$$ ")") >> SOME) NONE
-  -- Scan.optional (@{keyword "SECTION"} >> K true) false
+  -- Scan.optional (\<^keyword>\<open>SECTION\<close> >> K true) false
   -- parse_sorry_mode
-  -- (* code_expr_inP *) parse_l1' (@{keyword "in"} |-- ((@{keyword "self"} || Parse.name)
-        -- Scan.optional (@{keyword "module_name"} |-- Parse.name) ""
+  -- (* code_expr_inP *) parse_l1' (\<^keyword>\<open>in\<close> |-- ((\<^keyword>\<open>self\<close> || Parse.name)
+        -- Scan.optional (\<^keyword>\<open>module_name\<close> |-- Parse.name) ""
         -- code_expr_argsP))
   -- Scan.optional
-       ((Parse.$$$ "(" -- @{keyword "output_directory"}) |-- Parse.name --| Parse.$$$ ")" >> SOME)
+       ((Parse.$$$ "(" -- \<^keyword>\<open>output_directory\<close>) |-- Parse.name --| Parse.$$$ ")" >> SOME)
        NONE
 
 val parse_semantics =
   let val z = 0 in
       Scan.optional
-        (paren (@{keyword "generation_semantics"}
+        (paren (\<^keyword>\<open>generation_semantics\<close>
                |-- paren (parse_scheme
-                          -- Scan.optional ((Parse.$$$ "," -- @{keyword "oid_start"}) |-- Parse.nat)
+                          -- Scan.optional ((Parse.$$$ "," -- \<^keyword>\<open>oid_start\<close>) |-- Parse.nat)
                                            z)))
               (META.Gen_default, z)
   end
@@ -1209,7 +1209,7 @@ val mode =
     design_analysis
     (sorry_mode, Config.get ctxt quick_and_dirty) in
 
-     @{keyword "deep"} |-- parse_semantics -- parse_deep >>
+     \<^keyword>\<open>deep\<close> |-- parse_semantics -- parse_deep >>
      (fn ( (design_analysis, oid_start)
          , ( ((((skip_exportation, output_header_thy), output_disable_thy), sorry_mode), seri_args)
            , filename_thy)) =>
@@ -1223,14 +1223,14 @@ val mode =
                     , filename_thy = filename_thy
                     , tmp_export_code = Isabelle_System.create_tmp_path "deep_export_code" ""
                     , skip_exportation = skip_exportation }))
-  || @{keyword "shallow"} |-- parse_semantics -- parse_sorry_mode >>
+  || \<^keyword>\<open>shallow\<close> |-- parse_semantics -- parse_sorry_mode >>
      (fn ((design_analysis, oid_start), sorry_mode) =>
        Gen_shallow (mk_env true
                            NONE
                            oid_start
                            design_analysis
                            sorry_mode))
-  || (@{keyword "syntax_print"} |-- Scan.optional (Parse.number >> SOME) NONE) >>
+  || (\<^keyword>\<open>syntax_print\<close> |-- Scan.optional (Parse.number >> SOME) NONE) >>
      (fn n => Gen_syntax_print (case n of NONE => NONE | SOME n => Int.fromString n))
   end
 
@@ -1244,7 +1244,7 @@ fun f_command l_mode =
         | Gen_deep (env, i_deep) =>
            pair (fn thy => Gen_deep (env (Proof_Context.init_global thy), i_deep))
                 o cons
-            (@{command_keyword export_code}, Toplevel'.keep_theory (fn thy =>
+            (\<^command_keyword>\<open>export_code\<close>, Toplevel'.keep_theory (fn thy =>
               let val seri_args' =
                     List_mapi
                       (fn i => fn ((ml_compiler, ml_module), export_arg) =>
@@ -1296,7 +1296,7 @@ end
 
 subsection\<open>Factoring All Meta Commands Together\<close>
 
-setup\<open>ML_Antiquotation.inline @{binding mk_string} (Scan.succeed
+setup\<open>ML_Antiquotation.inline \<^binding>\<open>mk_string\<close> (Scan.succeed
 "(fn ctxt => fn x => ML_Pretty.string_of_polyml (ML_system_pretty (x, FixedInt.fromInt (Config.get ctxt ML_Print_Depth.print_depth))))")
 \<close>
 
@@ -1365,8 +1365,8 @@ end
 fun exec_deep i_deep e =
   let val (seri_args0, seri_args) = partition_self (#seri_args i_deep)
   in cons
-      ( case (seri_args0, seri_args) of ([_], []) => @{command_keyword print_syntax}
-                                      | _ => @{command_keyword export_code}
+      ( case (seri_args0, seri_args) of ([_], []) => \<^command_keyword>\<open>print_syntax\<close>
+                                      | _ => \<^command_keyword>\<open>export_code\<close>
       , Toplevel'.keep_theory (exec_deep0 i_deep e))
   end
 end
@@ -1389,7 +1389,7 @@ fun disp_time toplevel_keep_output =
       toplevel_keep_output tps Markup.antiquote
         let val msg = To_string0 msg
         in " " ^ Pretty.string_of
-             (Pretty.mark (Name_Space.markup (Proof_Context.const_space @{context}) msg)
+             (Pretty.mark (Name_Space.markup (Proof_Context.const_space \<^context>) msg)
                           (Pretty.str msg)) end
   in (tps, disp_time) end
 
@@ -1444,10 +1444,10 @@ fun thy_shallow l_obj get_all_meta_embed =
                                          , tr_report = report, tr_report_o = report_o
                                          , pr_report = report, pr_report_o = report_o
                                            (* irrelevant part *)
-                                         , begin_local_theory = K o not_used @{here}
-                                         , local_theory_to_proof' = K o K not_used @{here}
-                                         , local_theory_to_proof = K o K not_used @{here}
-                                         , tr_raw = not_used @{here} }
+                                         , begin_local_theory = K o not_used \<^here>
+                                         , local_theory_to_proof' = K o K not_used \<^here>
+                                         , local_theory_to_proof = K o K not_used \<^here>
+                                         , tr_raw = not_used \<^here> }
 
                                          { (* specialized part *)
                                            theory = Local_Theory.background_theory
@@ -1461,10 +1461,10 @@ fun thy_shallow l_obj get_all_meta_embed =
                                          , tr_report = report, tr_report_o = report_o
                                          , pr_report = report, pr_report_o = report_o
                                            (* irrelevant part *)
-                                         , begin_local_theory = K o not_used @{here}
-                                         , local_theory_to_proof' = K o K not_used @{here}
-                                         , local_theory_to_proof = K o K not_used @{here}
-                                         , tr_raw = not_used @{here} }
+                                         , begin_local_theory = K o not_used \<^here>
+                                         , local_theory_to_proof' = K o K not_used \<^here>
+                                         , local_theory_to_proof = K o K not_used \<^here>
+                                         , tr_raw = not_used \<^here> }
 
                                          (fn x => fn thy => aux (env, thy) [x])
                                          (pair env)
@@ -1511,7 +1511,7 @@ fun outer_syntax_commands''' is_safe mk_string cmd_spec cmd_descr parser get_all
         val m_tr = (Data_gen.get thy, [])
           |-> mapM_syntax_print (META.mapM (fn n =>
                 pair n
-                     o cons (@{command_keyword print_syntax},
+                     o cons (\<^command_keyword>\<open>print_syntax\<close>,
                              Toplevel'.keep_theory (fn thy =>
                                writeln (mk_string
                                          (Proof_Context.init_global
@@ -1578,14 +1578,14 @@ fun outer_syntax_commands''' is_safe mk_string cmd_spec cmd_descr parser get_all
                             (Toplevel'.keep_output tps Markup.operator "") end))
             , Data_gen.put)
             handle THY_REQUIRED pos =>
-              m_tr |-> thy_switch pos @{here} (thy_shallow NONE get_all_m)
+              m_tr |-> thy_switch pos \<^here> (thy_shallow NONE get_all_m)
          end
          handle THY_REQUIRED pos =>
-           m_tr |-> thy_switch pos @{here} (fn mode => fn thy => 
-                                            let val l_obj = get_all_m (SOME thy) in
-                                              (thy_deep (tap oo exec_deep0) l_obj
-                                                 #~> thy_shallow (SOME (K l_obj)) get_all_m) mode thy
-                                            end)
+           m_tr |-> thy_switch pos \<^here> (fn mode => fn thy => 
+                                        let val l_obj = get_all_m (SOME thy) in
+                                          (thy_deep (tap oo exec_deep0) l_obj
+                                             #~> thy_shallow (SOME (K l_obj)) get_all_m) mode thy
+                                        end)
       end
       |> uncurry Toplevel'.setup_theory))
  end
@@ -1604,10 +1604,10 @@ subsection\<open>Parameterizing the Semantics of Embedded Languages\<close>
 
 ML\<open>
 val () = let open Generation_mode in
-  Outer_Syntax.commands' @{command_keyword generation_syntax} "set the generating list"
+  Outer_Syntax.commands' \<^command_keyword>\<open>generation_syntax\<close> "set the generating list"
     ((   mode >> (fn x => SOME [x])
       || parse_l' mode >> SOME
-      || @{keyword "deep"} -- @{keyword "flush_all"} >> K NONE) >>
+      || \<^keyword>\<open>deep\<close> -- \<^keyword>\<open>flush_all\<close> >> K NONE) >>
     (fn SOME x => K (K (f_command x))
       | NONE => fn thy => fn _ => []
           |> fold (fn (env, i_deep) => exec_deep i_deep (META.compiler_env_config_reset_all env))
