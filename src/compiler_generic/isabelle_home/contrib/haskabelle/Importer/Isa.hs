@@ -107,6 +107,7 @@ data Stmt =
   | Class Name [Name] [TypeSign]
   | Instance Name Name [(Name, Sort)] [Function_Stmt]
   | Comment String
+  | ML Function_Stmt
   deriving (Show, Data)
 
 data Module = Module ThyName [ThyName] [Stmt] Bool

@@ -1,10 +1,5 @@
 (******************************************************************************
- * Featherweight-OCL --- A Formal Semantics for UML-OCL Version OCL 2.5
- *                       for the OMG Standard.
- *                       http://www.brucker.ch/projects/hol-testgen/
- *
- * Core_init.thy ---
- * This file is part of HOL-TestGen.
+ * Citadelle
  *
  * Copyright (c) 2011-2018 Université Paris-Saclay, Univ. Paris-Sud, France
  *               2013-2017 IRT SystemX, France
@@ -524,7 +519,7 @@ datatype reporting = Warning
                    | Error
                    | Writeln
 
-definition "raise_ml l_out s = SML (SML.app \<open>Ty'.check\<close>
+definition "raise_ml l_out s = SML (SML.app0 \<open>Ty'.check\<close>
     [ SML.list'
         (\<lambda>(rep, s).
           SML.pair (SML.basic [S.flatten [ \<open>META.\<close>

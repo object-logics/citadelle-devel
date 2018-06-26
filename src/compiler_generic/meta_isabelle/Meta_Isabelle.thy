@@ -81,7 +81,7 @@ datatype semi__term = Term_rewrite semi__term (* left *) string (* symb rewritin
                     | Term_apply semi__term "semi__term list"
                     | Term_paren string (* left *) string (* right *) semi__term
                     | Term_if_then_else semi__term semi__term semi__term
-                    | Term_let semi__term (* left *) semi__term (* right *) semi__term (* body *)
+                    | Term_let "(semi__term (* left *) \<times> semi__term (* right *)) list" semi__term (* body *)
                     | Term_term "string list" (* simulate a pre-initialized context (de bruijn variables under "lam") *)
                                 "term" (* usual continuation of inner syntax term *)
 
@@ -280,6 +280,7 @@ definition "Term_pair' l = (case l of [] \<Rightarrow> Term_basic [\<open>()\<cl
 definition "Term_pairs' f l = Term_pair' (L.map f l)"
 definition \<open>Term_string s = Term_basic [S.flatten [\<open>"\<close>, s, \<open>"\<close>]]\<close>
 definition "Term_string' s = Term_basic [S.flatten [\<open>\\\<close>, \<open><open>\<close>, s, \<open>\\\<close>, \<open><close>\<close>]]"
+definition "Term_string'' f s = Term_apply f [Term_string' s]"
 definition "Term_applys0 e l = Term_parenthesis (Term_apply e (L.map Term_parenthesis l))"
 definition "Term_applys e l = Term_applys0 (Term_parenthesis e) l"
 definition "Term_app e = Term_applys0 (Term_basic [e])"
@@ -462,5 +463,22 @@ subsection\<open>Operations of Fold, Map, ..., on the Meta-Model\<close>
 
 definition "map_lemma f = (\<lambda> Theory_lemma x \<Rightarrow> Theory_lemma (f x)
                            | x \<Rightarrow> x)"
+
+fun hol_to_sml where
+   "hol_to_sml e =
+ (\<lambda> Term_rewrite t1 s t2 \<Rightarrow> (if s \<triangleq> \<open>=\<close> then SML_rewrite else SML_binop)
+                              (hol_to_sml t1)
+                              s
+                              (hol_to_sml t2)
+  | Term_basic l \<Rightarrow> SML_basic l
+  | Term_apply t l \<Rightarrow> SML.app_pair (hol_to_sml t) (map hol_to_sml l)
+  | Term_paren _ _ (Term_let l e) \<Rightarrow> hol_to_sml (Term_let l e)
+  | Term_paren s1 s2 t \<Rightarrow> SML_paren s1 s2 (hol_to_sml t)
+  | Term_let l e \<Rightarrow>
+      SML_let (SML_top (List.map (\<lambda>(e1, e2).
+                                   SML_val_fun (Some Sval)
+                                               (SML.rewrite (hol_to_sml e1) \<open>=\<close> (hol_to_sml e2)))
+                                 l))
+              (hol_to_sml e)) e"
 
 end

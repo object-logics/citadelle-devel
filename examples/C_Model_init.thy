@@ -5,7 +5,7 @@
  * Copyright (c) 1999-2017 Manuel M T Chakravarty
  *                         Duncan Coutts
  *                         Benedikt Huber
- * Portions Copyright (c) 1989,1990  James A. Roskind
+ * Portions Copyright (c) 1989,1990 James A. Roskind
  *
  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
  *

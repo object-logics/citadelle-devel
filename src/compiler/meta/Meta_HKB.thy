@@ -103,6 +103,7 @@ datatype Stmt = Datatype "(TypeSpec * ((Name * (Type list)) list)) list"
               | Class Name "Name list" "TypeSign list"
               | Instance Name Name "(Name * Sort) list" "Function_Stmt list"
               | Comment string
+              | SML Function_Stmt
  
 datatype Module = Module ThyName "ThyName list" "Stmt list" bool
 

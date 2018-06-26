@@ -17,9 +17,8 @@ for all, then sorted together:
 The creation of the initial acronyms were nevertheless following
 certain rules relieving from combinatorial blow-ups, for instance:
 * Length: Unrestricted, but to fit in a top header file, first line
-  words are arranged to total less than 65 characters without breaking
-  any words, and 76 for subsequent lines --- the first line's word is
-  reserved to start with Citadelle.
+  words are arranged to total less than N characters without breaking
+  any words, and for subsequent lines: N + the length of Citadelle.
 * Order: They all contain in case insensitive increasing ordering the
   title letters Citadelle.
 * Sonority: Each element of the list is normally used only once, but

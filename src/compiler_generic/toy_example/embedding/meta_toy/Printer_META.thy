@@ -1,5 +1,5 @@
 (******************************************************************************
- * A Meta-Model for the Isabelle API
+ * Citadelle
  *
  * Copyright (c) 2011-2018 Université Paris-Saclay, Univ. Paris-Sud, France
  *               2013-2017 IRT SystemX, France
@@ -107,11 +107,11 @@ definition "of_boot_setup_env env = (\<lambda> Boot_setup_env e \<Rightarrow>
   of_setup
     env
     (Setup
-      (SML.app
+      (SML.app0
         \<open>Generation_mode.update_compiler_config\<close>
         [ SML.app
             \<open>K\<close>
-            [ SML_let_open
+            [ SML.let_open
                 \<open>META\<close>
                 ((* Instead of using
                     (*sml_of_compiler_env_config SML_apply (\<lambda>x. SML_basic [x]) e*)

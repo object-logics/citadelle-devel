@@ -3,7 +3,6 @@
  *                       for the OMG Standard.
  *                       http://www.brucker.ch/projects/hol-testgen/
  *
- * OCL_lib_Gogolla_challenge_naive.thy --- Example using the OCL library.
  * This file is part of HOL-TestGen.
  *
  * Copyright (c) 2011-2018 Université Paris-Saclay, Univ. Paris-Sud, France

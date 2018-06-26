@@ -52,17 +52,27 @@ begin
 definition "of_semi__val_fun = (\<lambda> Sval \<Rightarrow> \<open>val\<close>
                                 | Sfun \<Rightarrow> \<open>fun\<close>)"
 
-fun of_semi__term' where \<open>of_semi__term' e = (\<lambda>
+fun of_semi__term'0 and
+    of_semi__term'1 and
+    of_semi__term'  where
+   \<open>of_semi__term'0 e = (\<lambda>
     SML_string s \<Rightarrow> \<open>"%s"\<close> (To_string (escape_sml s))
-  | SML_rewrite val_fun e1 symb e2 \<Rightarrow> \<open>%s %s %s %s\<close> (of_semi__val_fun val_fun) (of_semi__term' e1) (To_string symb) (of_semi__term' e2)
+  | SML_rewrite e1 symb e2 \<Rightarrow> \<open>%s %s %s\<close> (of_semi__term'0 e1) (To_string symb) (of_semi__term'0 e2)
   | SML_basic l \<Rightarrow> \<open>%s\<close> (String_concat \<open> \<close> (L.map To_string l))
-  | SML_binop e1 s e2 \<Rightarrow> \<open>%s %s %s\<close> (of_semi__term' e1) (of_semi__term' (SML_basic [s])) (of_semi__term' e2)
-  | SML_annot e s \<Rightarrow> \<open>(%s:%s)\<close> (of_semi__term' e) (To_string s)
+  | SML_binop e1 s e2 \<Rightarrow> \<open>%s %s %s\<close> (of_semi__term'0 e1) (of_semi__term'0 (SML_basic [s])) (of_semi__term'0 e2)
+  | SML_annot e s \<Rightarrow> \<open>(%s:%s)\<close> (of_semi__term'0 e) (To_string s)
   | SML_function l \<Rightarrow> \<open>(fn %s)\<close> (String_concat \<open>
-    | \<close> (List.map (\<lambda> (s1, s2) \<Rightarrow> \<open>%s => %s\<close> (of_semi__term' s1) (of_semi__term' s2)) l))
-  | SML_apply e l \<Rightarrow> \<open>(%s %s)\<close> (of_semi__term' e) (String_concat \<open> \<close> (List.map (\<lambda> e \<Rightarrow> \<open>(%s)\<close> (of_semi__term' e)) l))
-  | SML_paren p_left p_right e \<Rightarrow> \<open>%s%s%s\<close> (To_string p_left) (of_semi__term' e) (To_string p_right)
-  | SML_let_open s e \<Rightarrow> \<open>let open %s in %s end\<close> (To_string s) (of_semi__term' e)) e\<close>
+    | \<close> (List.map (\<lambda> (s1, s2) \<Rightarrow> \<open>%s => %s\<close> (of_semi__term'0 s1) (of_semi__term'0 s2)) l))
+  | SML_apply e l \<Rightarrow> \<open>(%s %s)\<close> (of_semi__term'0 e) (String_concat \<open> \<close> (List.map (\<lambda> e \<Rightarrow> \<open>(%s)\<close> (of_semi__term'0 e)) l))
+  | SML_paren p_left p_right e \<Rightarrow> \<open>%s%s%s\<close> (To_string p_left) (of_semi__term'0 e) (To_string p_right)
+  | SML_let e1 e2 \<Rightarrow> \<open>let %s in %s end\<close> (of_semi__term' e1) (of_semi__term'0 e2)) e\<close>
+ | \<open>of_semi__term'1 e = (\<lambda>
+    SML_open s \<Rightarrow> \<open>open %s\<close> (To_string s)
+  | SML_val_fun val_fun e \<Rightarrow> \<open>%s%s\<close> (case val_fun of None \<Rightarrow> \<open>\<close>
+                                                   | Some val_fun \<Rightarrow> \<open>%s \<close> (of_semi__val_fun val_fun))
+                                    (of_semi__term'0 e)) e\<close>
+ | \<open>of_semi__term' e = (\<lambda>
+    SML_top l \<Rightarrow> String_concat \<open> \<close> (List.map of_semi__term'1 l)) e\<close>
 
 end
 
@@ -70,6 +80,8 @@ lemmas [code] =
   (* def *)
   Print.of_semi__val_fun_def
   (* fun *)
+  Print.of_semi__term'0.simps
+  Print.of_semi__term'1.simps
   Print.of_semi__term'.simps
 
 end

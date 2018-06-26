@@ -1,10 +1,5 @@
 (******************************************************************************
- * Featherweight-OCL --- A Formal Semantics for UML-OCL Version OCL 2.5
- *                       for the OMG Standard.
- *                       http://www.brucker.ch/projects/hol-testgen/
- *
- * Floor1_access.thy ---
- * This file is part of HOL-TestGen.
+ * HOL-OCL
  *
  * Copyright (c) 2011-2018 Université Paris-Saclay, Univ. Paris-Sud, France
  *               2013-2017 IRT SystemX, France
@@ -127,8 +122,7 @@ definition "print_access_choose_switch
              ((L.flatten o L.flatten) (L.map (\<lambda>i. L.map (\<lambda>j. if i = j then [] else [(i, j)]) l) l)))
           (class_arity expr))"
 definition "print_access_choose_ml = start_map'''' O.ML o (\<lambda>expr _.
-  (let a = \<lambda>f x. SML.app f [x]
-     ; b = \<lambda>s. SML.basic [s]
+  (let b = \<lambda>s. SML.basic [s]
      ; lets = \<lambda>var exp. SML (SML.rewrite_val (SML.basic [var]) \<open>=\<close> exp)
      ; mk_var = \<lambda>i. b (S.flatten [\<open>x\<close>, String.natural_to_digit10 i]) in
    L.flatten

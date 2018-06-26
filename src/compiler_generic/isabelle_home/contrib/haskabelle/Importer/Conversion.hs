@@ -7,6 +7,7 @@ module Importer.Conversion (importFiles, importProject) where
 
 import Importer.Library
 
+import qualified Data.Generics as G
 import qualified Data.List as List
 import qualified Language.Haskell.Interpreter as I
 import Text.PrettyPrint (render)
@@ -21,22 +22,22 @@ import Importer.Convert
 import Importer.Printer (pprint)
 
 import qualified Importer.Ident_Env as Ident_Env (GlobalE)
-import qualified Importer.Isa as Isa (Module (..), ThyName (..))
+import qualified Importer.Isa as Isa (Module (..), Stmt (..), ThyName (..))
 import qualified Importer.Hsx as Hsx
 import qualified Importer.Conversion.SML as SML
 
 
-importProject :: Config -> FilePath -> Maybe ([String], [String], String, String) -> [String] -> IO ()
-importProject config adaptDir metaParse hskContents = do
+importProject :: Config -> FilePath -> Bool -> Maybe ([String], [String], String, String) -> [String] -> IO ()
+importProject config adaptDir metaParseShallow metaParse hskContents = do
   adapt <- readAdapt adaptDir
-  runConversion config (convertFiles adapt metaParse hskContents)
+  runConversion config (convertFiles adapt metaParseShallow metaParse hskContents)
 
-importFiles :: [FilePath] -> Maybe FilePath -> Bool -> Bool -> Bool -> Maybe FilePath -> Bool -> Bool -> FilePath -> Maybe ([String], [String], String, String) -> [String] -> IO ()
+importFiles :: [FilePath] -> Maybe FilePath -> Bool -> Bool -> Bool -> Maybe FilePath -> Bool -> Bool -> FilePath -> Bool -> Maybe ([String], [String], String, String) -> [String] -> IO ()
 importFiles files out exportCode tryImport onlyTypes basePathAbs getIgnoreNotInScope absMutParams
   = importProject (defaultConfig defaultCustomisations files out exportCode tryImport onlyTypes basePathAbs getIgnoreNotInScope absMutParams)
 
-convertFiles :: Adaption -> Maybe ([String], [String], String, String) -> [String] -> Conversion ()
-convertFiles adapt metaParse hskContents = do
+convertFiles :: Adaption -> Bool -> Maybe ([String], [String], String, String) -> [String] -> Conversion ()
+convertFiles adapt metaParseShallow metaParse hskContents = do
 
   inFiles <- getInputFilesRecursively
   outDir <- getOutputDir
@@ -67,7 +68,7 @@ convertFiles adapt metaParse hskContents = do
   liftIO $ maybe (return ()) (\outDir -> copyFile (preludeFile adapt) (combine outDir (takeFileName (preludeFile adapt)))) outDir
   sequence_ (map (writeIsaUnit adaptTable (reservedKeywords adapt)) convertedUnits)
   liftIO $ case outDir of Nothing -> putStrLn $ SML.gshow ( List.nubBy (let f (Isa.Module t _ _ _) = t in \m1 m2 -> f m1 == f m2)
-                                                             $ concatMap (\(IsaUnit l _ _) -> l) convertedUnits
+                                                             $ concatMap (\(IsaUnit l _ _) -> (if metaParseShallow then G.everywhere (G.mkT (\s -> case s of Isa.Function f -> Isa.ML f; x -> x)) else id) l) convertedUnits
                                                           , report)
                           _       -> return ()
 

@@ -76,13 +76,12 @@ definition "of_datatype _ = (\<lambda> Datatype _ [] \<Rightarrow> \<open>\<clos
          \<open>%s %s\<close>
            (To_string n)
            (String_concat \<open> \<close> (L.map (\<lambda>x. \<open>\"%s\"\<close> (of_semi__typ x)) l))) l) )) in
-  \<open>%s
-%s\<close> (of_datatype (case version of Datatype_new \<Rightarrow> \<open>datatype\<close>
+  \<open>%s%s\<close> (of_datatype (case version of Datatype_new \<Rightarrow> \<open>datatype\<close>
                                 | Datatype_old \<Rightarrow> \<open>old_datatype\<close>
                                 | Datatype_old_atomic \<Rightarrow> \<open>atomic_old_datatype\<close>
                                 | Datatype_old_atomic_sub \<Rightarrow> \<open>sub_atomic_old_datatype\<close>) d)
-    (String_concat \<open>
-\<close> (map (of_datatype \<open>and\<close>) ds)))"
+    (String_concat \<open>\<close> (L.map (of_datatype \<open>
+and\<close>) ds)))"
 
 definition "of_type_synonym _ = (\<lambda> Type_synonym n l \<Rightarrow>
   \<open>type_synonym %s = \"%s\"\<close> (of_semi__typ' n) (of_semi__typ l))"
@@ -100,7 +99,7 @@ fun of_semi__term where "of_semi__term e = (\<lambda>
   | Term_apply e l \<Rightarrow> \<open>%s %s\<close> (of_semi__term e) (String_concat \<open> \<close> (List.map (\<lambda> e \<Rightarrow> \<open>%s\<close> (of_semi__term e)) l))
   | Term_paren p_left p_right e \<Rightarrow> \<open>%s%s%s\<close> (To_string p_left) (of_semi__term e) (To_string p_right)
   | Term_if_then_else e_if e_then e_else \<Rightarrow> \<open>if %s then %s else %s\<close> (of_semi__term e_if) (of_semi__term e_then) (of_semi__term e_else)
-  | Term_let e1 e2 e_body \<Rightarrow> \<open>let %s = %s in %s\<close> (of_semi__term e1) (of_semi__term e2) (of_semi__term e_body)
+  | Term_let l e_body \<Rightarrow> \<open>let %s in %s\<close> (String_concat \<open>; \<close> (List.map (\<lambda>(e1, e2). \<open>%s = %s\<close> (of_semi__term e1) (of_semi__term e2)) l)) (of_semi__term e_body)
   | Term_term l pure \<Rightarrow> of_pure_term True (L.map To_string l) pure) e"
 
 definition "of_type_notation _ = (\<lambda> Type_notation n e \<Rightarrow>

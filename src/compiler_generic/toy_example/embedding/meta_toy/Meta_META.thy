@@ -1,5 +1,5 @@
 (******************************************************************************
- * A Meta-Model for the Isabelle API
+ * Citadelle
  *
  * Copyright (c) 2011-2018 Université Paris-Saclay, Univ. Paris-Sud, France
  *               2013-2017 IRT SystemX, France

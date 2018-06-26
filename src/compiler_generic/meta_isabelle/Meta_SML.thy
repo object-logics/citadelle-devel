@@ -55,15 +55,18 @@ text\<open>The following datatypes beginning with \verb|semi__| represent semi-c
 datatype semi__val_fun = Sval
                        | Sfun
 
-datatype semi__term' = SML_string string
-                     | SML_rewrite semi__val_fun semi__term' (* left *) string (* symb rewriting *) semi__term' (* right *)
-                     | SML_basic "string list"
-                     | SML_binop semi__term' string semi__term'
-                     | SML_annot semi__term' string (* type *)
-                     | SML_function "(semi__term' (* pattern *) \<times> semi__term' (* to return *)) list"
-                     | SML_apply semi__term' "semi__term' list"
-                     | SML_paren string (* left *) string (* right *) semi__term'
-                     | SML_let_open string semi__term'
+datatype semi__term'0 = SML_string string
+                      | SML_rewrite semi__term'0 (* left *) string (* symb rewriting *) semi__term'0 (* right *)
+                      | SML_basic "string list"
+                      | SML_binop semi__term'0 string semi__term'0
+                      | SML_annot semi__term'0 string (* type *)
+                      | SML_function "(semi__term'0 (* pattern *) \<times> semi__term'0 (* to return *)) list"
+                      | SML_apply semi__term'0 "semi__term'0 list"
+                      | SML_paren string (* left *) string (* right *) semi__term'0
+                      | SML_let semi__term' semi__term'0
+     and semi__term'1 = SML_open string
+                      | SML_val_fun "semi__val_fun option" semi__term'0
+     and semi__term'  = SML_top "semi__term'1 list"
 
 subsection\<open>Extending the Meta-Model\<close>
 
@@ -77,9 +80,9 @@ definition "annot = SML_annot"
 definition "function = SML_function"
 definition "apply = SML_apply"
 definition "paren = SML_paren"
-definition "let_open = SML_let_open"
 
 definition "app s = apply (basic [s])"
+definition "app0 s1 s2 = SML_top [SML_val_fun None (app s1 s2)]"
 definition "none = basic [\<open>NONE\<close>]"
 definition "some s = app \<open>SOME\<close> [s]"
 definition "option' f l = (case map_option f l of None \<Rightarrow> none | Some s \<Rightarrow> some s)"
@@ -88,10 +91,13 @@ definition "parenthesis (* mandatory parenthesis *) = paren \<open>(\<close> \<o
 definition "binop_l s l = (case rev l of x # xs \<Rightarrow> List.fold (\<lambda>x. binop x s) xs x)"
 definition "list l = (case l of [] \<Rightarrow> basic [\<open>[]\<close>] | _ \<Rightarrow> paren \<open>[\<close> \<open>]\<close> (binop_l \<open>,\<close> l))"
 definition "list' f l = list (L.map f l)"
+definition "pair0 l = paren \<open>(\<close> \<open>)\<close> (binop_l \<open>,\<close> l)"
 definition "pair e1 e2 = parenthesis (binop e1 \<open>,\<close> e2)"
 definition "pair' f1 f2 = (\<lambda> (e1, e2) \<Rightarrow> parenthesis (binop (f1 e1) \<open>,\<close> (f2 e2)))"
-definition "rewrite_val = rewrite Sval"
-definition "rewrite_fun = rewrite Sfun"
+definition "rewrite_val e1 s e2 = SML_top [SML_val_fun (Some Sval) (rewrite e1 s e2)]"
+definition "rewrite_fun e1 s e2 = SML_top [SML_val_fun (Some Sfun) (rewrite e1 s e2)]"
+definition "let_open s = SML_let (SML_top [SML_open s])"
+definition "app_pair e l = apply e (case l of [] \<Rightarrow> [] | _ \<Rightarrow> [pair0 l])"
 end
 
 lemmas [code] =
@@ -104,8 +110,8 @@ lemmas [code] =
   SML.function_def
   SML.apply_def
   SML.paren_def
-  SML.let_open_def
   SML.app_def
+  SML.app0_def
   SML.none_def
   SML.some_def
   SML.option'_def
@@ -114,9 +120,12 @@ lemmas [code] =
   SML.binop_l_def
   SML.list_def
   SML.list'_def
+  SML.pair0_def
   SML.pair_def
   SML.pair'_def
   SML.rewrite_val_def
   SML.rewrite_fun_def
+  SML.let_open_def
+  SML.app_pair_def
 
 end

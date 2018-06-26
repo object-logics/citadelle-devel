@@ -116,7 +116,8 @@ definition "of_Stmt a b = rec_Stmt
   (ap1 a (b \<open>Function\<close>) (of_Function_Stmt a b))
   (ap3 a (b \<open>Class\<close>) (of_Name a b) (of_list a b (of_Name a b)) (of_list a b (of_TypeSign a b)))
   (ap4 a (b \<open>Instance\<close>) (of_Name a b) (of_Name a b) (of_list a b (of_pair a b (of_Name a b) (of_Sort a b))) (of_list a b (of_Function_Stmt a b)))
-  (ap1 a (b \<open>Comment\<close>) (of_string a b))"
+  (ap1 a (b \<open>Comment\<close>) (of_string a b))
+  (ap1 a (b \<open>SML\<close>) (of_Function_Stmt a b))"
 
 definition "of_Module a b = rec_Module
   (ap4 a (b \<open>Module\<close>) (of_ThyName a b) (of_list a b (of_ThyName a b)) (of_list a b (of_Stmt a b)) (of_bool b))"

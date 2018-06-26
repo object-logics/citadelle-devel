@@ -41,20 +41,24 @@
 
 section\<open>Dynamic Meta Embedding with Reflection\<close>
 
-theory Generator_dynamic_sequential
+theory Generator_dynamic_export_testing
 imports Printer
-        "../../isabelle_home/src/HOL/Isabelle_Main2"
+        "../compiler_generic/isabelle_home/src/HOL/Isabelle_Main2"
         "~~/src/HOL/Library/Old_Datatype"
-(*<*)
-  keywords (* Toy language *)
+  keywords (* OCL (USE tool) *)
            "Between"
            "Attributes" "Operations" "Constraints"
            "Role"
            "Ordered" "Subsets" "Union" "Redefines" "Derived" "Qualifier"
            "Existential" "Inv" "Pre" "Post"
+           (* OCL (added) *)
            "self"
            "Nonunique" "Sequence_"
            "with_only"
+           (* Haskabelle *)
+           "datatype_old" "datatype_old_atomic" "datatype_old_atomic_sub"
+           "try_import" "only_types" "base_path" "ignore_not_in_scope" "abstract_mutual_data_params"
+           "concat_modules" "load" "meta"
 
            (* Isabelle syntax *)
            "output_directory"
@@ -63,26 +67,17 @@ imports Printer
            "generation_semantics"
            "flush_all"
 
-           (* Isabelle semantics (parameterizing the semantics of Toy language) *)
+           (* Isabelle semantics (parameterizing the semantics of OCL) *)
            "design" "analysis" "oid_start"
 
-       and (* Toy language *)
-           "Enum"
-           "Abstract_class" "Class"
-           "Association" "Composition" "Aggregation"
-           "Abstract_associationclass" "Associationclass"
-           "Context"
-           "End" "Instance" "BaseType" "State" "Transition" "Tree"
-
-           (* Isabelle syntax *)
+       and (* Isabelle syntax *)
            "generation_syntax"
 
            :: thy_decl
-(*>*)
 begin
 
 text\<open>In the ``dynamic'' solution: the exportation is automatically handled inside Isabelle/jEdit.
-Inputs are provided using the syntax of the Toy Language, and in output
+Inputs are provided using the syntax of OCL, and in output
 we basically have two options:
 \begin{itemize}
 \item The first is to generate an Isabelle file for inspection or debugging.
@@ -153,17 +148,17 @@ structure From = struct
  val class = string
  val sort = list class
  fun typ e = (fn
-     Type (s, l) => (META.Type o pair string (list typ)) (s, l)
+     Type (s, l) => (META.Typea o pair string (list typ)) (s, l)
    | TFree (s, s0) => (META.TFree o pair string sort) (s, s0)
-   | TVar (i, s0) => (META.TVar o pair indexname sort) (i, s0)
+   | TVar (i, s0) => (META.TVara o pair indexname sort) (i, s0)
   ) e
  fun term e = (fn
-     Const (s, t) => (META.Const o pair string typ) (s, t)
+     Const (s, t) => (META.Consta o pair string typ) (s, t)
    | Free (s, t) => (META.Free o pair string typ) (s, t)
    | Var (i, t) => (META.Var o pair indexname typ) (i, t)
    | Bound i => (META.Bound o nat) i
-   | Abs (s, ty, t) => (META.Abs o pair3 string typ term) (s, ty, t)
-   | op $ (term1, term2) => (META.App o pair term term) (term1, term2)
+   | Abs (s, ty, t) => (META.Absa o pair3 string typ term) (s, ty, t)
+   | op $ (term1, term2) => (META.Appa o pair term term) (term1, term2)
   ) e
  end
 
@@ -178,44 +173,31 @@ fun out_intensify s1 s2 = Output.state ((s1 |> Markup.markup Markup.intensify) ^
 fun out_intensify' tps fmt = out_intensify (Timing.message (Timing.result tps) |> Markup.markup fmt)
 
 structure Toplevel' = struct
-  datatype state_read = Load_backup | Load_previous
-  datatype state_write = Store_backup | Store_default
-
-  datatype toplevel = Theory of theory -> theory
-                    | Keep of theory -> unit
-                    | Read_Write of state_read * state_write
-
-  structure T = struct
-    val theory = cons o Theory
-    val keep = cons o Keep
-    val read_write = cons o Read_Write
-  end
-
-  val keep_theory = T.keep
-  fun keep f tr = (@{command_keyword print_syntax}, T.keep f) :: tr
-  fun read_write_keep rw = (@{command_keyword print_syntax}, fn tr => tr |> T.read_write rw |> T.keep (K ()))
-  fun setup_theory (res, tr) f = rev ((@{command_keyword setup}, T.theory (f res)) :: tr)
-  fun keep_output tps fmt msg = cons (@{command_keyword print_syntax}, T.keep (fn _ => out_intensify' tps fmt msg))
+  fun keep_theory f = Toplevel.keep (f o Toplevel.theory_of)
+  fun keep f tr = (@{command_keyword print_syntax}, Toplevel.keep f) :: tr
+  fun read_write_keep rw = (@{command_keyword print_syntax}, fn tr => tr |> Toplevel.read_write rw |> Toplevel.keep (K ()))
+  fun setup_theory (res, tr) f = rev ((@{command_keyword setup}, Toplevel.theory (f res)) :: tr)
+  fun keep_output tps fmt msg = cons (@{command_keyword print_syntax}, Toplevel.keep (fn _ => out_intensify' tps fmt msg))
 end
 
-structure Outer_Syntax' = struct
-  fun command name_pos comment parse =
-    Outer_Syntax.command name_pos comment
-      (parse >> (fn f =>
-        Toplevel.theory (fn thy =>
-          fold snd (f thy NONE) [] |> rev
-                                   |> (fn tr => fold (fn Toplevel'.Theory f => f
-                                                       | Toplevel'.Keep f => tap f
-                                                       | Toplevel'.Read_Write _ => I) tr thy))))
-end
+structure Resources' = struct
+  fun check_path' check_file ctxt dir (name, pos) =
+    let
+      fun err msg pos = error (msg ^ Position.here pos)
+      val _ = Context_Position.report ctxt pos Markup.language_path;
+  
+      val path = Path.append dir (Path.explode name) handle ERROR msg => err msg pos;
+      val path' = Path.expand path handle ERROR msg => err msg pos;
+      val _ = Context_Position.report ctxt pos (Markup.path (Path.smart_implode path));
+      val _ =
+        (case check_file of
+          NONE => path
+        | SOME check => (check path handle ERROR msg => err msg pos));
+    in Path.implode path' end
 
-structure Old_Datatype_Aux' = struct
-  fun default_config' n =
-    if n = 0 then
-      Old_Datatype_Aux.default_config
-    else
-      let val _ = warning "Type of datatype not available in this running version of Isabelle"
-      in Old_Datatype_Aux.default_config end
+  fun check_dir thy = check_path' (SOME File.check_dir)
+                                  (Proof_Context.init_global thy)
+                                  (Resources.master_directory thy)
 end
 \<close>
 
@@ -464,7 +446,7 @@ fun end' top =
 structure Cmd = struct open META open META_overload
 fun input_source ml = Input.source false (of_semi__term' ml) (Position.none, Position.none)
 
-fun datatype' top (Datatype (version, l)) = 
+fun datatype' top (Datatypea (version, l)) = 
   case version of Datatype_new => #local_theory top NONE NONE
   (BNF_FP_Def_Sugar.co_datatype_cmd
     BNF_Util.Least_FP
@@ -479,7 +461,7 @@ fun datatype' top (Datatype (version, l)) =
             , [])) l)))
   | _ => #theory top
   ((snd oo Old_Datatype.add_datatype_cmd
-     (Old_Datatype_Aux'.default_config'
+     (Old_Datatype_Aux.default_config'
        (case version of Datatype_old => 0 | Datatype_old_atomic => 1 | _ => 2)))
     (map (fn ((n, v), l) =>
            ( (To_sbinding n, map (fn v => (To_string0 v, NONE)) v, NoSyn)
@@ -508,7 +490,7 @@ fun consts top (Consts (n, ty, symb)) = #theory top
                         , Mixfix (Input.string ("(_) " ^ To_string0 symb), [], 1000, Position.no_range))])
 fun definition top def = #local_theory' top NONE NONE
   let val (def, e) = case def of
-      Definition e => (NONE, e)
+      Definitiona e => (NONE, e)
     | Definition_where1 (name, (abbrev, prio), e) =>
         (SOME ( To_sbinding name
               , NONE
@@ -554,7 +536,7 @@ fun section n s _ =
   let fun mk s n = if n <= 0 then s else mk ("  " ^ s) (n - 1) in
     out_intensify (mk (Markup.markup Markup.keyword3 (To_string0 s)) n) ""
   end
-fun ml top (SML ml) = #generic_theory top
+fun ml top (SMLa ml) = #generic_theory top
   (ML_Context.exec let val source = input_source ml in
                    fn () => ML_Context.eval_source (ML_Compiler.verbose true ML_Compiler.flags) source
                    end #>
@@ -569,12 +551,11 @@ fun thm top (Thm thm) = #keep top (fn state =>
 fun interpretation1 n loc_n loc_param =
   Interpretation.interpretation_cmd ( [ ( (To_string0 loc_n, Position.none)
                                         , ( (To_string0 n, true)
-                                          , ( if loc_param = [] then
-                                                Expression.Named []
-                                              else
-                                                Expression.Positional (map (SOME o of_semi__term)
-                                                                           loc_param)
-                                            , [])))]
+                                          , if loc_param = [] then
+                                              Expression.Named []
+                                            else
+                                              Expression.Positional (map (SOME o of_semi__term)
+                                                                         loc_param)))]
                                     , [])
                                     []
 end
@@ -628,14 +609,14 @@ fun semi__theory (top : ('transitionM, 'transitionM, 'state) toplevel) = let ope
         @{command_keyword section} | 1 =>
         @{command_keyword subsection} | _ =>
         @{command_keyword subsubsection},
-     #tr_raw top (Pure_Syn.document_command {markdown = false} (NONE, Input.string (To_string0 s))))
+     #tr_raw top (Thy_Output.document_command {markdown = false} (NONE, Input.string (To_string0 s))))
   |>:: (@{command_keyword print_syntax}, #keep top (Cmd.section n s)) end
 | Theory_text (Text s) =>
   cons (@{command_keyword text},
-     #tr_raw top (Pure_Syn.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
+     #tr_raw top (Thy_Output.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
 | Theory_text_raw (Text_raw s) =>
   cons (@{command_keyword text_raw},
-     #tr_raw top (Pure_Syn.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
+     #tr_raw top (Thy_Output.document_command {markdown = true} (NONE, Input.string (To_string0 s))))
 | Theory_ML ml =>
   cons (@{command_keyword ML}, Cmd.ml top ml)
 | Theory_setup setup =>
@@ -792,7 +773,7 @@ fun all_meta_thy top_theory top_local_theory aux ret = fn
 end
 end
 \<close>
-(*<*)
+
 subsection\<open>Directives of Compilation for Target Languages\<close>
 
 ML\<open>
@@ -879,7 +860,164 @@ val check =
       ; error msg)
     end)
 
-val compiler = []
+val compiler = let open Export_code_env in
+  [ let val ml_ext = "hs" in
+    ( "Haskell", ml_ext, Directory, Haskell.Filename.hs_function
+    , check [("ghc --version", "ghc is not installed (required for compiling a Haskell project)")]
+    , (fn mk_fic => fn _ => fn mk_free => fn thy =>
+        File.write (mk_fic ("Main." ^ ml_ext))
+          (String.concatWith "; " [ "import qualified Unsafe.Coerce"
+                         , "import qualified " ^ Haskell.function
+                         , "import qualified " ^ Haskell.argument
+                         , "main :: IO ()"
+                         , "main = " ^ Haskell.function ^ "." ^ Isabelle.function ^
+                           " (Unsafe.Coerce.unsafeCoerce " ^ Haskell.argument ^ "." ^
+                           mk_free (Proof_Context.init_global thy)
+                                   Isabelle.argument_main ([]: (string * string) list) ^
+                           ")"]))
+    , fn tmp_export_code => fn tmp_file =>
+        compile [ "mv " ^ tmp_file ^ "/" ^ Haskell.Filename.hs_argument ml_ext ^ " " ^
+                          Path.implode tmp_export_code
+                , "cd " ^ Path.implode tmp_export_code ^
+                  " && ghc -outputdir _build " ^ Haskell.Filename.hs_main ml_ext ]
+                (Path.implode (Path.append tmp_export_code (Path.make [Haskell.main]))))
+    end
+  , let val ml_ext = "ml" in
+    ( "OCaml", ml_ext, File, OCaml.Filename.function
+    , check [("ocp-build -version", "ocp-build is not installed (required for compiling an OCaml project)")
+            ,("ocamlopt -version", "ocamlopt is not installed (required for compiling an OCaml project)")]
+    , fn mk_fic => fn ml_module => fn mk_free => fn thy =>
+        let val () =
+          File.write
+            (mk_fic (OCaml.Filename.makefile "ocp"))
+            (String.concat
+              [ "comp += \"-g\" link += \"-g\" "
+              , "begin generated = true begin library \"nums\" end end "
+              , "begin program \"", OCaml.make, "\" sort = true files = [ \"", OCaml.Filename.function ml_ext
+              , "\" \"", OCaml.Filename.argument ml_ext
+              , "\" \"", OCaml.Filename.main_fic ml_ext
+              , "\" ]"
+              , "requires = [\"nums\"] "
+              , "end" ]) in
+        File.write (mk_fic (OCaml.Filename.main_fic ml_ext))
+          ("let _ = Function." ^ ml_module ^ "." ^ Isabelle.function ^
+           " (Obj.magic (Argument." ^ ml_module ^ "." ^
+           mk_free (Proof_Context.init_global thy)
+                   Isabelle.argument_main
+                   ([]: (string * string) list) ^ "))")
+        end
+    , fn tmp_export_code => fn tmp_file =>
+        compile
+          [ "mv " ^ tmp_file ^ " " ^
+              Path.implode (Path.append tmp_export_code (Path.make [OCaml.Filename.argument ml_ext]))
+          , "cd " ^ Path.implode tmp_export_code ^
+            " && ocp-build -init -scan -no-bytecode 2>&1" ]
+          (Path.implode (Path.append tmp_export_code (Path.make [ "_obuild"
+                                                                , OCaml.make
+                                                                , OCaml.make ^ ".asm"]))))
+    end
+  , let val ml_ext = "scala"
+        val ml_module = Unsynchronized.ref ("", "") in
+    ( "Scala", ml_ext, File, Scala.Filename.function
+    , check [("scala -e 0", "scala is not installed (required for compiling a Scala project)")]
+    , (fn _ => fn ml_mod => fn mk_free => fn thy =>
+        ml_module := (ml_mod, mk_free (Proof_Context.init_global thy)
+                                      Isabelle.argument_main
+                                      ([]: (string * string) list)))
+    , fn tmp_export_code => fn tmp_file =>
+        let val l = File.read_lines (Path.explode tmp_file)
+            val (ml_module, ml_main) = Unsynchronized.! ml_module
+            val () =
+              File.write_list
+               (Path.append tmp_export_code (Path.make [Scala.Filename.argument ml_ext]))
+               (List.map
+                 (fn s => s ^ "\n")
+                 ("object " ^ ml_module ^ " { def main (__ : Array [String]) = " ^
+                  ml_module ^ "." ^ Isabelle.function ^ " (" ^ ml_module ^ "." ^ ml_main ^ ")"
+                  :: l @ ["}"])) in
+        compile []
+          ("scala -nowarn " ^ Path.implode (Path.append tmp_export_code
+                                                        (Path.make [Scala.Filename.argument ml_ext])))
+        end)
+    end
+  , let val ml_ext_thy = "thy"
+        val ml_ext_ml = "ML" in
+    ( "SML", ml_ext_ml, File, SML.Filename.function
+    , check [ let open Path val isa = "isabelle" in
+              ( implode (expand (append (variable "ISABELLE_HOME") (make ["bin", isa]))) ^ " version"
+              , isa ^ " is not installed (required for compiling a SML project)")
+              end ]
+    , fn mk_fic => fn ml_module => fn mk_free => fn thy =>
+         let val esc_star = "*"
+             fun ml l =
+               List.concat
+               [ [ "ML{" ^ esc_star ]
+               , map (fn s => s ^ ";") l
+               , [ esc_star ^ "}"] ]
+             val () =
+               let val fic = mk_fic (SML.Filename.function ml_ext_ml) in
+               (* replace ("\\" ^ "<") by ("\\\060") in 'fic' *)
+               File.write_list fic
+                 (map (fn s =>
+                         (if s = "" then
+                           ""
+                         else
+                           String.concatWith "\\"
+                             (map (fn s =>
+                                     let val l = String.size s in
+                                     if l > 0 andalso String.sub (s,0) = #"<" then
+                                       "\\060" ^ String.substring (s, 1, String.size s - 1)
+                                     else
+                                       s end)
+                                  (String.fields (fn c => c = #"\\") s))) ^ "\n")
+                      (File.read_lines fic))
+               end in
+         File.write_list (mk_fic (SML.Filename.main_fic ml_ext_thy))
+           (map (fn s => s ^ "\n") (List.concat
+             [ [ "theory " ^ SML.main
+               , "imports Main"
+               , "begin"
+               , "declare [[ML_print_depth = 500]]"
+                 (* any large number so that @{make_string} displays all the expression *) ]
+             , ml [ "val stdout_file = Unsynchronized.ref (File.read (Path.make [\"" ^
+                      SML.Filename.stdout ml_ext_ml ^ "\"]))"
+                  , "use \"" ^ SML.Filename.argument ml_ext_ml ^ "\"" ]
+             , ml let val arg = "argument" in
+                  [ "val " ^ arg ^ " = YXML.content_of (@{make_string} (" ^
+                    ml_module ^ "." ^
+                    mk_free (Proof_Context.init_global thy)
+                            Isabelle.argument_main
+                            ([]: (string * string) list) ^ "))"
+                  , "use \"" ^ SML.Filename.function ml_ext_ml ^ "\""
+                  , "ML_Context.eval_source (ML_Compiler.verbose false ML_Compiler.flags) (Input.source false (\"let open " ^
+                      ml_module ^ " in " ^ Isabelle.function ^ " (\" ^ " ^ arg ^
+                      " ^ \") end\") (Position.none, Position.none) )" ]
+                  end
+             , [ "end" ]]))
+         end
+    , fn tmp_export_code => fn tmp_file =>
+        let open Path
+            val stdout_file = Isabelle_System.create_tmp_path "stdout_file" "thy"
+            val () = File.write (append tmp_export_code (make [SML.Filename.stdout ml_ext_ml]))
+                                (implode (expand stdout_file))
+            val (l, (_, exit_st)) =
+              compile
+                [ "mv " ^ tmp_file ^ " " ^ implode (append tmp_export_code
+                                                           (make [SML.Filename.argument ml_ext_ml]))
+                , "cd " ^ implode tmp_export_code ^
+                  " && echo 'use_thy \"" ^ SML.main ^ "\";' | " ^
+                  implode (expand (append (variable "ISABELLE_HOME") (make ["bin", "isabelle"]))) ^
+                  " console" ]
+                "true"
+            val stdout = File.read stdout_file |> (fn s => let val () = File.rm stdout_file in s end)
+        in  (l, (stdout, if List.exists (fn (err, _) =>
+                              List.exists (fn "*** Error" => true | _ => false)
+                                (String.tokens (fn #"\n" => true | _ => false) err)) l then
+                           List.app (fn (out, err) => (warning err; writeln out)) l |> K 1
+                         else exit_st))
+        end)
+    end ]
+end
 
 structure Find = struct
 
@@ -952,8 +1090,13 @@ fun export_code_cmd' seris tmp_export_code f_err raw_cs thy =
           end) seris
       end)
 
-fun mk_term ctxt s =
-  fst (Scan.pass (Context.Proof ctxt) Args.term (Token.explode0 (Thy_Header.get_keywords' ctxt) s))
+fun scan thy pos str =
+  Symbol.explode str
+  |> Source.of_list
+  |> Token.source (Thy_Header.get_keywords' thy) pos
+  |> Source.exhaust;
+
+fun mk_term ctxt s = fst (Scan.pass (Context.Proof ctxt) Args.term (scan ctxt Position.none s))
 
 fun mk_free ctxt s l =
   let val t_s = mk_term ctxt s in
@@ -1100,7 +1243,7 @@ fun f_command l_mode =
     (META.mapM
       (fn Gen_shallow env =>
            pair (fn thy => Gen_shallow (env (Proof_Context.init_global thy), thy))
-                o cons (Toplevel'.read_write_keep (Toplevel'.Load_previous, Toplevel'.Store_backup))
+                o cons (Toplevel'.read_write_keep (Toplevel.Load_previous, Toplevel.Store_backup))
         | Gen_syntax_print n => pair (K (Gen_syntax_print n))
         | Gen_deep (env, i_deep) =>
            pair (fn thy => Gen_deep (env (Proof_Context.init_global thy), i_deep))
@@ -1347,22 +1490,22 @@ fun thy_shallow l_obj get_all_meta_embed =
       (thy, case l_obj of SOME f => f | NONE => fn _ => get_all_meta_embed (SOME thy))
       |> META.map_prod I fst)
 
-fun thy_switch (*pos1 pos2*) f mode tr =
+fun thy_switch pos1 pos2 f mode tr =
   ( ( mode
-    , (*Toplevel'.keep
+    , Toplevel'.keep
         (fn _ => Output.information ( "Theory required while transitions were being built"
                                     ^ Position.here pos1
                                     ^ ": Commands will not be concurrently considered. "
                                     ^ Markup.markup
                                         (Markup.properties (Position.properties_of pos2) Markup.position)
-                                        "(Handled here\092<^here>)"))*) tr)
+                                        "(Handled here\092<^here>)")) tr)
   , f #~> Generation_mode.Data_gen.put)
 
 in
 
 fun outer_syntax_commands''' is_safe mk_string cmd_spec cmd_descr parser get_all_meta_embed =
  let open Generation_mode in
-  Outer_Syntax'.command cmd_spec cmd_descr
+  Outer_Syntax.commands' cmd_spec cmd_descr
     (parser >> (fn name => fn thy => fn _ =>
       (* WARNING: Whenever there would be errors raised by functions taking "thy" as input,
                   they will not be shown.
@@ -1379,7 +1522,7 @@ fun outer_syntax_commands''' is_safe mk_string cmd_spec cmd_descr parser get_all
                                            (case n of NONE => thy
                                                     | SOME n => Config.put_global ML_Print_Depth.print_depth n thy))
                                          name)))))
-      in (*let
+      in let
            val l_obj = get_all_m (is_safe thy)
                        (* In principle, it is fine if (SOME thy) is provided to
                           get_all_m. However, because certain types of errors are most of the
@@ -1442,7 +1585,7 @@ fun outer_syntax_commands''' is_safe mk_string cmd_spec cmd_descr parser get_all
               m_tr |-> thy_switch pos @{here} (thy_shallow NONE get_all_m)
          end
          handle THY_REQUIRED pos =>
-           *)m_tr |-> thy_switch (*pos @{here}*) (fn mode => fn thy => 
+           m_tr |-> thy_switch pos @{here} (fn mode => fn thy => 
                                             let val l_obj = get_all_m (SOME thy) in
                                               (thy_deep (tap oo exec_deep0) l_obj
                                                  #~> thy_shallow (SOME (K l_obj)) get_all_m) mode thy
@@ -1465,7 +1608,7 @@ subsection\<open>Parameterizing the Semantics of Embedded Languages\<close>
 
 ML\<open>
 val () = let open Generation_mode in
-  Outer_Syntax'.command @{command_keyword generation_syntax} "set the generating list"
+  Outer_Syntax.commands' @{command_keyword generation_syntax} "set the generating list"
     ((   mode >> (fn x => SOME [x])
       || parse_l' mode >> SOME
       || @{keyword "deep"} -- @{keyword "flush_all"} >> K NONE) >>
@@ -1478,490 +1621,4 @@ val () = let open Generation_mode in
 end
 \<close>
 
-subsection\<open>Common Parser for Toy\<close>
-
-ML\<open>
-structure TOY_parse = struct
-  datatype ('a, 'b) use_context = TOY_context_invariant of 'a
-                                | TOY_context_pre_post of 'b
-
-  fun optional f = Scan.optional (f >> SOME) NONE
-  val colon = Parse.$$$ ":"
-  fun repeat2 scan = scan ::: Scan.repeat1 scan
-
-  fun xml_unescape s = YXML.content_of s |> Symbol_Pos.explode0 |> Symbol_Pos.implode |> From.string
-
-  fun outer_syntax_commands2 mk_string cmd_spec cmd_descr parser v_true v_false get_all_meta_embed =
-    outer_syntax_commands' mk_string cmd_spec cmd_descr
-      (optional (paren @{keyword "shallow"}) -- parser)
-      (fn (is_shallow, use) => fn thy =>
-         get_all_meta_embed
-           (if is_shallow = NONE then
-              ( fn s =>
-                  META.T_to_be_parsed ( From.string s
-                                     , xml_unescape s)
-              , v_true)
-            else
-              (From.read_term thy, v_false))
-           use)
-
-  (* *)
-
-  val ident_dot_dot = let val f = Parse.sym_ident >> (fn "\<bullet>" => "\<bullet>" | _ => Scan.fail "Syntax error") in
-                      f -- f end
-  val ident_star = Parse.sym_ident (* "*" *)
-
-  (* *)
-
-  fun natural0 s = case Int.fromString s of SOME i => From.nat i
-                                          | NONE => Scan.fail "Syntax error"
-
-  val natural = Parse.number >> natural0
-
-  val unlimited_natural =  ident_star >> (fn "*" => META.Mult_star
-                                           | "\<infinity>" => META.Mult_infinity
-                                           | _ => Scan.fail "Syntax error")
-                        || Parse.number >> (META.Mult_nat o natural0)
-
-  val term_base =
-       Parse.number >> (META.ToyDefInteger o From.string)
-    || Parse.float_number >> (META.ToyDefReal o (From.pair From.string From.string o
-         (fn s => case String.tokens (fn #"." => true
-                                       | _ => false) s of [l1,l2] => (l1,l2)
-                                                        | _ => Scan.fail "Syntax error")))
-    || Parse.string >> (META.ToyDefString o From.string)
-
-  val multiplicity = parse_l' (unlimited_natural -- optional (ident_dot_dot |-- unlimited_natural))
-
-  fun toy_term x =
-   (   term_base >> META.ShallB_term
-    || Parse.binding >> (META.ShallB_str o From.binding)
-    || @{keyword "self"} |-- Parse.nat >> (fn n => META.ShallB_self (From.internal_oid n))
-    || paren (Parse.list toy_term) >> (* untyped, corresponds to Set, Sequence or Pair *)
-                                      (* WARNING for Set: we are describing a finite set *)
-                                      META.ShallB_list) x
-
-  val name_object = optional (Parse.list1 Parse.binding --| colon) -- Parse.binding
-
-  val type_object_weak =
-    let val name_object = Parse.binding >> (fn s => (NONE, s)) in
-                    name_object -- Scan.repeat (Parse.$$$ "<" |-- Parse.list1 name_object) >>
-    let val f = fn (_, s) => META.ToyTyCore_pre (From.binding s) in
-    fn (s, l) => META.ToyTyObj (f s, map (map f) l)
-    end
-    end
-
-  val type_object = name_object -- Scan.repeat (Parse.$$$ "<" |-- Parse.list1 name_object) >>
-    let val f = fn (_, s) => META.ToyTyCore_pre (From.binding s) in
-    fn (s, l) => META.ToyTyObj (f s, map (map f) l)
-    end
-
-  val category =
-       multiplicity
-    -- optional (@{keyword "Role"} |-- Parse.binding)
-    -- Scan.repeat (   @{keyword "Ordered"} >> K META.Ordered0
-                    || @{keyword "Subsets"} |-- Parse.binding >> K META.Subsets0
-                    || @{keyword "Union"} >> K META.Union0
-                    || @{keyword "Redefines"} |-- Parse.binding >> K META.Redefines0
-                    || @{keyword "Derived"} -- Parse.$$$ "=" |-- Parse.term >> K META.Derived0
-                    || @{keyword "Qualifier"} |-- Parse.term >> K META.Qualifier0
-                    || @{keyword "Nonunique"} >> K META.Nonunique0
-                    || @{keyword "Sequence_"} >> K META.Sequence) >>
-    (fn ((l_mult, role), l) =>
-       META.Toy_multiplicity_ext (l_mult, From.option From.binding role, l, ()))
-
-  val type_base =   Parse.reserved "Void" >> K META.ToyTy_base_void
-                 || Parse.reserved "Boolean" >> K META.ToyTy_base_boolean
-                 || Parse.reserved "Integer" >> K META.ToyTy_base_integer
-                 || Parse.reserved "UnlimitedNatural" >> K META.ToyTy_base_unlimitednatural
-                 || Parse.reserved "Real" >> K META.ToyTy_base_real
-                 || Parse.reserved "String" >> K META.ToyTy_base_string
-
-  fun use_type_gen type_object v =
-     ((* collection *)
-      Parse.reserved "Set" |-- use_type >>
-        (fn l => META.ToyTy_collection (META.Toy_multiplicity_ext ([], NONE, [META.Set], ()), l))
-   || Parse.reserved "Sequence" |-- use_type >>
-        (fn l => META.ToyTy_collection (META.Toy_multiplicity_ext ([], NONE, [META.Sequence], ()), l))
-   || category -- use_type >> META.ToyTy_collection
-
-      (* pair *)
-   || Parse.reserved "Pair" |--
-      (   use_type -- use_type
-      || Parse.$$$ "(" |-- use_type --| Parse.$$$ "," -- use_type --| Parse.$$$ ")") >> META.ToyTy_pair
-
-      (* base *)
-   || type_base
-
-      (* raw HOL *)
-   || Parse.sym_ident (* "\<acute>" *) |-- Parse.typ --| Parse.sym_ident (* "\<acute>" *) >>
-        (META.ToyTy_raw o xml_unescape)
-
-      (* object type *)
-   || type_object >> META.ToyTy_object
-
-   || ((Parse.$$$ "(" |-- Parse.list (   (Parse.binding --| colon >> (From.option From.binding o SOME))
-                                      -- (   Parse.$$$ "(" |-- use_type --| Parse.$$$ ")"
-                                          || use_type_gen type_object_weak) >> META.ToyTy_binding
-                                      ) --| Parse.$$$ ")"
-        >> (fn ty_arg => case rev ty_arg of
-              [] => META.ToyTy_base_void
-            | ty_arg => fold (fn x => fn acc => META.ToyTy_pair (x, acc))
-                             (tl ty_arg)
-                             (hd ty_arg)))
-       -- optional (colon |-- use_type))
-      >> (fn (ty_arg, ty_out) => case ty_out of NONE => ty_arg
-                                              | SOME ty_out => META.ToyTy_arrow (ty_arg, ty_out))
-   || (Parse.$$$ "(" |-- use_type --| Parse.$$$ ")" >> (fn s => META.ToyTy_binding (NONE, s)))) v
-  and use_type x = use_type_gen type_object x
-
-  val use_prop =
-   (optional (optional (Parse.binding >> From.binding) --| Parse.$$$ ":") >> (fn NONE => NONE
-                                                                               | SOME x => x))
-   -- Parse.term --| optional (Parse.$$$ ";") >> (fn (n, e) => fn from_expr =>
-                                                  META.ToyProp_ctxt (n, from_expr e))
-
-  (* *)
-
-  val association_end =
-       type_object
-    -- category
-    --| optional (Parse.$$$ ";")
-
-  val association = optional @{keyword "Between"} |-- Scan.optional (repeat2 association_end) []
-
-  val invariant =
-         optional @{keyword "Constraints"}
-     |-- Scan.optional (@{keyword "Existential"} >> K true) false
-     --| @{keyword "Inv"}
-     --  use_prop
-
-  structure Outer_syntax_Association = struct
-    fun make ass_ty l = META.Toy_association_ext (ass_ty, META.ToyAssRel l, ())
-  end
-
-  (* *)
-
-  val context =
-    Scan.repeat
-      ((   optional (@{keyword "Operations"} || Parse.$$$ "::")
-        |-- Parse.binding
-        -- use_type
-        --| optional (Parse.$$$ "=" |-- Parse.term || Parse.term)
-        -- Scan.repeat
-              (      (@{keyword "Pre"} || @{keyword "Post"})
-                  -- use_prop >> TOY_context_pre_post
-               || invariant >> TOY_context_invariant)
-        --| optional (Parse.$$$ ";")) >>
-              (fn ((name_fun, ty), expr) => fn from_expr =>
-                META.Ctxt_pp
-                  (META.Toy_ctxt_pre_post_ext
-                    ( From.binding name_fun
-                    , ty
-                    , From.list (fn TOY_context_pre_post (pp, expr) =>
-                                     META.T_pp (if pp = "Pre" then
-                                                  META.ToyCtxtPre
-                                                else
-                                                  META.ToyCtxtPost, expr from_expr)
-                                 | TOY_context_invariant (b, expr) =>
-                                     META.T_invariant (META.T_inv (b, expr from_expr))) expr
-                    , ())))
-       ||
-       invariant >> (fn (b, expr) => fn from_expr => META.Ctxt_inv (META.T_inv (b, expr from_expr))))
-
-  val class =
-        optional @{keyword "Attributes"}
-    |-- Scan.repeat (Parse.binding --| colon -- use_type
-                     --| optional (Parse.$$$ ";"))
-    -- context
-
-  datatype use_classDefinition = TOY_class | TOY_class_abstract
-  datatype ('a, 'b) use_classDefinition_content = TOY_class_content of 'a | TOY_class_synonym of 'b
-
-  structure Outer_syntax_Class = struct
-    fun make from_expr abstract ty_object attribute oper =
-      META.Toy_class_raw_ext
-        ( ty_object
-        , From.list (From.pair From.binding I) attribute
-        , From.list (fn f => f from_expr) oper
-        , abstract
-        , ())
-  end
-
-  (* *)
-
-  val term_object = parse_l_with (   optional (    Parse.$$$ "("
-                                               |-- Parse.binding
-                                               --| Parse.$$$ ","
-                                               -- Parse.binding
-                                               --| Parse.$$$ ")"
-                                               --| (Parse.sym_ident >> (fn "|=" => Scan.succeed
-                                                                         | _ => Scan.fail "")))
-                                  -- Parse.binding
-                                  -- (    Parse.$$$ "="
-                                      |-- toy_term))
-
-  val list_attr' = term_object >> (fn res => (res, [] : binding list))
-  fun object_cast e =
-    (   annot_ty term_object
-     -- Scan.repeat (    (Parse.sym_ident >> (fn "->" => Scan.succeed
-                                               | "\<leadsto>" => Scan.succeed
-                                               | "\<rightarrow>" => Scan.succeed
-                                               | _ => Scan.fail ""))
-                     |-- (   Parse.reserved "toyAsType"
-                             |-- Parse.$$$ "("
-                             |-- Parse.binding
-                             --| Parse.$$$ ")"
-                          || Parse.binding)) >> (fn ((res, x), l) => (res, rev (x :: l)))) e
-  val object_cast' = object_cast >> (fn (res, l) => (res, rev l))
-
-  fun get_toyinst l =
-    META.ToyInstance (map (fn ((name,typ), ((l_attr_with, l_attr), is_cast)) =>
-        let val f = map (fn ((pre_post, attr), data) =>
-                              ( From.option (From.pair From.binding From.binding) pre_post
-                              , ( From.binding attr
-                                , data)))
-            val l_attr =
-              fold
-                (fn b => fn acc => META.ToyAttrCast (From.binding b, acc, []))
-                is_cast
-                (META.ToyAttrNoCast (f l_attr)) in
-        META.Toy_instance_single_ext
-          ( From.option From.binding name
-          , From.option From.binding typ
-          , From.option From.binding l_attr_with
-          , l_attr
-          , ()) end) l)
-
-  val parse_instance = (Parse.binding >> SOME)
-                     -- optional (@{keyword "::"} |-- Parse.binding) --| @{keyword "="}
-                     -- (list_attr' || object_cast')
-
-  (* *)
-
-  datatype state_content =
-    ST_l_attr of (binding option * (((binding * binding) option * binding) * META.toy_data_shallow) list) * binding list
-  | ST_binding of binding
-
-  val state_parse = parse_l' (   object_cast >> ST_l_attr
-                              || Parse.binding >> ST_binding)
-
-  val mk_state =
-    map (fn ST_l_attr l =>
-              META.ToyDefCoreAdd
-                (case get_toyinst (map (fn (l_i, l_ty) =>
-                                         ((NONE, SOME (hd l_ty)), (l_i, rev (tl l_ty)))) [l]) of
-                   META.ToyInstance [x] => x)
-          | ST_binding b => META.ToyDefCoreBinding (From.binding b))
-
-  (* *)
-
-  datatype state_pp_content = ST_PP_l_attr of state_content list
-                            | ST_PP_binding of binding
-
-  val state_pp_parse = state_parse >> ST_PP_l_attr
-                       || Parse.binding >> ST_PP_binding
-
-  val mk_pp_state = fn ST_PP_l_attr l => META.ToyDefPPCoreAdd (mk_state l)
-                     | ST_PP_binding s => META.ToyDefPPCoreBinding (From.binding s)
-end
-\<close>
-
-subsection\<open>Setup of Meta Commands for Toy: @{command Enum}\<close>
-
-ML\<open>
-val () =
-  outer_syntax_commands' @{mk_string} @{command_keyword Enum} ""
-    (Parse.binding -- parse_l1' Parse.binding)
-    (fn (n1, n2) =>
-      K (META.META_enum (META.ToyEnum (From.binding n1, From.list From.binding n2))))
-\<close>
-
-subsection\<open>Setup of Meta Commands for Toy: (abstract) @{command Class}\<close>
-
-ML\<open>
-local
-  open TOY_parse
-
-  fun mk_classDefinition abstract cmd_spec =
-    outer_syntax_commands2 @{mk_string} cmd_spec "Class generation"
-      (   Parse.binding --| Parse.$$$ "=" -- TOY_parse.type_base >> TOY_class_synonym
-       ||    type_object
-          -- class >> TOY_class_content)
-      (curry META.META_class_raw META.Floor1)
-      (curry META.META_class_raw META.Floor2)
-      (fn (from_expr, META_class_raw) =>
-       fn TOY_class_content (ty_object, (attribute, oper)) =>
-            META_class_raw (Outer_syntax_Class.make
-                             from_expr
-                             (abstract = TOY_class_abstract)
-                             ty_object
-                             attribute
-                             oper)
-        | TOY_class_synonym (n1, n2) =>
-            META.META_class_synonym (META.ToyClassSynonym (From.binding n1, n2)))
-in
-val () = mk_classDefinition TOY_class @{command_keyword Class}
-val () = mk_classDefinition TOY_class_abstract @{command_keyword Abstract_class}
-end
-\<close>
-
-subsection\<open>Setup of Meta Commands for Toy: @{command Association}, @{command Composition}, @{command Aggregation}\<close>
-
-ML\<open>
-local
-  open TOY_parse
-
-  fun mk_associationDefinition ass_ty cmd_spec =
-    outer_syntax_commands' @{mk_string} cmd_spec ""
-      (   repeat2 association_end
-       ||     optional Parse.binding
-          |-- association)
-      (K o META.META_association o Outer_syntax_Association.make ass_ty)
-in
-val () = mk_associationDefinition META.ToyAssTy_association @{command_keyword Association}
-val () = mk_associationDefinition META.ToyAssTy_composition @{command_keyword Composition}
-val () = mk_associationDefinition META.ToyAssTy_aggregation @{command_keyword Aggregation}
-end
-\<close>
-
-subsection\<open>Setup of Meta Commands for Toy: (abstract) @{command Associationclass}\<close>
-
-ML\<open>
-
-local
-  open TOY_parse
-
-  datatype use_associationClassDefinition = TOY_associationclass | TOY_associationclass_abstract
-
-  fun mk_associationClassDefinition abstract cmd_spec =
-    outer_syntax_commands2 @{mk_string} cmd_spec ""
-      (   type_object
-       -- association
-       -- class
-       -- optional (Parse.reserved "aggregation" || Parse.reserved "composition"))
-      (curry META.META_ass_class META.Floor1)
-      (curry META.META_ass_class META.Floor2)
-      (fn (from_expr, META_ass_class) =>
-       fn (((ty_object, l_ass), (attribute, oper)), assty) =>
-          META_ass_class
-            (META.ToyAssClass
-              ( Outer_syntax_Association.make
-                  (case assty of SOME "aggregation" => META.ToyAssTy_aggregation
-                               | SOME "composition" => META.ToyAssTy_composition
-                               | _ => META.ToyAssTy_association)
-                  l_ass
-              , Outer_syntax_Class.make
-                  from_expr
-                  (abstract = TOY_associationclass_abstract)
-                  ty_object
-                  attribute
-                  oper)))
-in
-val () = mk_associationClassDefinition TOY_associationclass @{command_keyword Associationclass}
-val () = mk_associationClassDefinition TOY_associationclass_abstract @{command_keyword Abstract_associationclass}
-end
-\<close>
-
-subsection\<open>Setup of Meta Commands for Toy: @{command Context}\<close>
-
-ML\<open>
-local
- open TOY_parse
-in
-val () =
-  outer_syntax_commands2 @{mk_string} @{command_keyword Context} ""
-    (optional (Parse.list1 Parse.binding --| colon)
-     -- Parse.binding
-     -- context)
-    (curry META.META_ctxt META.Floor1)
-    (curry META.META_ctxt META.Floor2)
-    (fn (from_expr, META_ctxt) =>
-    (fn ((l_param, name), l) =>
-    META_ctxt
-      (META.Toy_ctxt_ext
-        ( case l_param of NONE => [] | SOME l => From.list From.binding l
-        , META.ToyTyObj (META.ToyTyCore_pre (From.binding name), [])
-        , From.list (fn f => f from_expr) l
-        , ()))))
-end
-\<close>
-
-subsection\<open>Setup of Meta Commands for Toy: @{command End}\<close>
-
-ML\<open>
-val () =
-  outer_syntax_commands'' @{mk_string} @{command_keyword End} "Class generation"
-    (Scan.optional ( Parse.$$$ "[" -- Parse.reserved "forced" -- Parse.$$$ "]" >> K true
-                    || Parse.$$$ "!" >> K true) false)
-    (fn b =>
-      K (if b then
-           [META.META_flush_all META.ToyFlushAll]
-         else
-           []))
-\<close>
-
-subsection\<open>Setup of Meta Commands for Toy: @{command BaseType}, @{command Instance}, @{command State}\<close>
-
-ML\<open>
-val () =
-  outer_syntax_commands' @{mk_string} @{command_keyword BaseType} ""
-    (parse_l' TOY_parse.term_base)
-    (K o META.META_def_base_l o META.ToyDefBase)
-
-local
-  open TOY_parse
-in
-val () =
-  outer_syntax_commands' @{mk_string} @{command_keyword Instance} ""
-    (Scan.optional (parse_instance -- Scan.repeat (optional @{keyword "and"} |-- parse_instance) >>
-                                                                        (fn (x, xs) => x :: xs)) [])
-    (K o META.META_instance o get_toyinst)
-
-val () =
-  outer_syntax_commands' @{mk_string} @{command_keyword State} ""
-    (TOY_parse.optional (paren @{keyword "shallow"}) -- Parse.binding --| @{keyword "="}
-     -- state_parse)
-     (fn ((is_shallow, name), l) =>
-      (K o META.META_def_state)
-        ( if is_shallow = NONE then META.Floor1 else META.Floor2
-        , META.ToyDefSt (From.binding name, mk_state l)))
-end
-\<close>
-
-subsection\<open>Setup of Meta Commands for Toy: @{command Transition}\<close>
-
-ML\<open>
-local
-  open TOY_parse
-in
-val () =
-  outer_syntax_commands' @{mk_string} @{command_keyword Transition} ""
-    (TOY_parse.optional (paren @{keyword "shallow"})
-     -- TOY_parse.optional (Parse.binding --| @{keyword "="})
-     -- state_pp_parse
-     -- TOY_parse.optional state_pp_parse)
-    (fn (((is_shallow, n), s_pre), s_post) =>
-      (K o META.META_def_transition)
-        ( if is_shallow = NONE then META.Floor1 else META.Floor2
-        , META.ToyDefPP ( From.option From.binding n
-                       , mk_pp_state s_pre
-                       , From.option mk_pp_state s_post)))
-end
-\<close>
-
-subsection\<open>Setup of Meta Commands for Toy: @{command Tree}\<close>
-
-ML\<open>
-local
-  open TOY_parse
-in
-val () =
-  outer_syntax_commands' @{mk_string} @{command_keyword Tree} ""
-    (natural -- natural)
-    (K o META.META_class_tree o META.ToyClassTree)
-end
-(*val _ = print_depth 100*)
-\<close>
-(*>*)
 end

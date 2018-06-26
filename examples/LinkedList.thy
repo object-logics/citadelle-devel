@@ -1,13 +1,5 @@
 (******************************************************************************
- * Featherweight-OCL --- A Formal Semantics for UML-OCL Version OCL 2.5
- *                       for the OMG Standard.
- *                       http://www.brucker.ch/projects/hol-testgen/
- *
- * LinkedList.thy --- OCL Contracts and Example drawn from
- *                     "A Specification-Based Test Case Generation Method for UML/OCL"
- *                     (Brucker, Krieger, Longuet, and  Wolff)
- *
- * This file is part of HOL-TestGen.
+ * HOL-OCL
  *
  * Copyright (c) 2011-2018 Université Paris-Saclay, Univ. Paris-Sud, France
  *               2013-2017 IRT SystemX, France
@@ -46,6 +38,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************)
+
+(*
+ * OCL Contracts and Example drawn from
+ * "A Specification-Based Test Case Generation Method for UML/OCL"
+ * (Brucker, Krieger, Longuet, and  Wolff)
+ *)
 
 chapter{* Example: Linked List *}
 
