@@ -3002,32 +3002,16 @@ by(insert assms, simp add: OclForall_def OclValid_def false_def true_def invalid
 lemma OclForall_rep_set_true:
  assumes "\<tau> \<Turnstile> \<delta> X"
  shows "(\<tau> \<Turnstile> OclForall X P) = (\<forall>x \<in> \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (X \<tau>)\<rceil>\<rceil>. \<tau> \<Turnstile> P (\<lambda>\<tau>. x))"
-proof -
- have destruct_ocl : "\<And>x \<tau>. x = true \<tau> \<or> x = false \<tau> \<or> x = null \<tau> \<or> x = \<bottom> \<tau>"
-  apply(case_tac x) apply (metis bot_Boolean_def)
-  apply(rename_tac x', case_tac x') apply (metis null_Boolean_def)
-  apply(rename_tac x'', case_tac x'') apply (metis (full_types) true_def)
- by (metis (full_types) false_def)
-
- have disjE4 : "\<And> P1 P2 P3 P4 R.
-   (P1 \<or> P2 \<or> P3 \<or> P4) \<Longrightarrow> (P1 \<Longrightarrow> R) \<Longrightarrow> (P2 \<Longrightarrow> R) \<Longrightarrow> (P3 \<Longrightarrow> R) \<Longrightarrow> (P4 \<Longrightarrow> R) \<Longrightarrow> R"
- by metis
- show ?thesis
   apply(simp add: OclForall_def OclValid_def true_def false_def invalid_def
                   bot_fun_def bot_option_def null_fun_def null_option_def split: if_split_asm)
-  apply(rule conjI, rule impI) apply (metis drop.simps option.distinct(1) invalid_def)
-  apply(rule impI, rule conjI, rule impI) apply (metis option.distinct(1))
-  apply(rule impI, rule conjI, rule impI) apply (metis drop.simps)
+  apply(rule conjI, rule impI)
+   apply force
   apply(intro conjI impI ballI)
-   proof - fix x show "\<forall>x\<in>\<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (X \<tau>)\<rceil>\<rceil>. P (\<lambda>_. x) \<tau> \<noteq> \<lfloor>None\<rfloor> \<Longrightarrow>
-                       \<forall>x\<in>\<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (X \<tau>)\<rceil>\<rceil>. \<exists>y. P (\<lambda>_. x) \<tau> = \<lfloor>y\<rfloor> \<Longrightarrow>
-                       \<forall>x\<in>\<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (X \<tau>)\<rceil>\<rceil>. P (\<lambda>_. x) \<tau> \<noteq> \<lfloor>\<lfloor>False\<rfloor>\<rfloor> \<Longrightarrow>
-                       x \<in> \<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (X \<tau>)\<rceil>\<rceil> \<Longrightarrow> P (\<lambda>\<tau>. x) \<tau> = \<lfloor>\<lfloor>True\<rfloor>\<rfloor>"
-   apply(erule_tac x = x in ballE)+
-   by(rule disjE4[OF destruct_ocl[of "P (\<lambda>\<tau>. x) \<tau>"]],
-      (simp add: true_def false_def null_fun_def null_option_def bot_fun_def bot_option_def)+)
- qed(simp add: assms[simplified OclValid_def true_def])+
-qed
+      apply force
+     apply force
+    apply force
+   apply force
+by (metis OclValid_def assms true_def)
 
 lemma OclForall_includes :
  assumes x_def : "\<tau> \<Turnstile> \<delta> x"

@@ -500,7 +500,7 @@ definition "print_examp_instance_defassoc_gen name l_ocli env =
                                             (let t = a_l (Typ_base const_oid) in
                                              Ty_times t t))
             , Term_annot' (b var_oid) const_oid
-            , a \<open>drop\<close>
+            , a \<open>the\<close>
               (Term_applys (print_examp_def_st_assoc (snd o rbt) map_self map_username l_ocli)
                            [Term_annot' (b var_oid_class) const_oid])])
           [ (b \<open>Nil\<close>, b \<open>None\<close>)

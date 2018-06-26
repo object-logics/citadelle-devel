@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+# Author: Florian Haftmann, TU Muenchen
+#
+# Building a Haskabelle distribution from repository.
+#
+# Must be run in an isabelle environment (e.g. via "isabelle env")
+
+## diagnostics
+
+function fail()
+{
+  echo "$1" >&2
+  exit 2
+}
+
+## environment
+
+HASKABELLE_HOME="$(cd "$(dirname "$0")"; cd "$(pwd -P)"; cd ..; pwd)"
+export HASKABELLE_HOME
+
+if [ -z "$HG" ]
+then
+  HG=hg
+fi
+if type -p $HG > /dev/zero
+then
+  HG=$(type -p $HG)
+else
+  fail "Mercurial not found"
+fi
+
+if [ -z $REPOSITORY ]
+then
+  REPOSITORY="file://$("$HG" root)"
+fi
+
+if [ "$1" == "--regression" ]
+then
+  REGRESSION=1
+  shift
+else
+  REGRESSION=
+fi
+
+if [ -z "$1" ]
+then
+  REVISION=tip
+  VERSION=""
+  ARCHIVE="Haskabelle-$("$HG" tip --template '{date|shortdate}')"
+else
+  REVISION="$1"
+  VERSION="$REVISION"
+  ARCHIVE="$REVISION"
+fi
+
+DIST_HOME="${DIST_HOME:-$HOME/tmp/haskabelle-dist}"
+mkdir -p "$DIST_HOME" || fail "Could not allocate directory $DIST_HOME"
+
+## check out
+
+cd "$DIST_HOME"
+mkdir "$ARCHIVE" || fail "Directory $ARCHIVE already exists (in $(pwd))"
+cd "$ARCHIVE"
+"$HG" -R "$REPOSITORY" archive -t files -r "$REVISION" . || fail "Could not check out source files"
+
+## remove junk
+
+rm README
+rm .hgignore
+rm .hgtags
+rm .hg_archival.txt
+rm $(find ex/src_hs -name "*.disabled")
+
+## brand version
+
+if [ -n "$VERSION" ]
+then
+  perl -i -pe 's/"Haskabelle \(repository snapshot\)"/"'$VERSION'"/g' Importer/Version.hs
+fi
+
+## building generated files
+
+admin/builddoc > /dev/null || fail "Could not build documentation"
+
+## include manual
+
+mv -f doc-src/Haskabelle/haskabelle.pdf doc/haskabelle.pdf
+rm -rf doc-src
+rm -f lib/texinputs
+
+## regression, if desired
+
+if [ "$REGRESSION" ]
+then
+  lib/regression || fail "Could not carry out regression test"
+fi
+
+## remove admin, build
+
+rm -rf admin build
+
+## dist bundle
+
+cd ..
+tar -czvf "$ARCHIVE.tar.gz" "$ARCHIVE" || fail "Could not build archive"

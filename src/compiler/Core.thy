@@ -58,6 +58,7 @@ imports "core/Floor1_enum"
         "core/Floor2_examp"
         "core/Floor1_ctxt"
         "core/Floor2_ctxt"
+        "core/Floor1_haskabelle"
 begin
 
 subsection\<open>Preliminaries\<close>
@@ -230,6 +231,7 @@ local_setup \<open>embedding_fun_info_f2 @{const_name Floor2_ctxt.print_ctxt_inv
 local_setup \<open>embedding_fun_info_f2 @{const_name Floor2_ctxt.print_ctxt_thm}\<close>
 local_setup \<open>embedding_fun_info @{const_name print_meta_setup_def_state}\<close>
 local_setup \<open>embedding_fun_info @{const_name print_meta_setup_def_transition}\<close>
+local_setup \<open>embedding_fun_info @{const_name print_haskell}\<close>
 
 subsection\<open>Assembling Translations\<close>
 
@@ -526,6 +528,9 @@ definition "thy_enum_flat = Embed_theories []"
 definition  thy_enum :: (* polymorphism weakening needed by code_reflect *) "_ embedding'" where
            "thy_enum = Embed_theories [ section' \<open>Enum\<close>
                                       , PRINT_enum ]"
+definition  thy_haskell :: (* polymorphism weakening needed by code_reflect *) "_ embedding'" where
+           "thy_haskell = Embed_theories [ section' \<open>Haskell\<close>
+                                         , PRINT_haskell ]"
 definition "thy_class_synonym = Embed_theories []"
 definition "thy_class_tree = Embed_theories []"
 definition "thy_class_flat = Embed_theories []"
@@ -636,7 +641,8 @@ definition "comp_env_input_class_mk f_try f_accu_reset f_fold f =
            ; (env, accu) =
                List.fold
                  (\<lambda>ast. comp_env_save ast (case ast of
-                     META_instance meta \<Rightarrow> fold_thy0 meta thy_instance
+                     META_haskell meta \<Rightarrow> fold_thy0 meta thy_haskell
+                   | META_instance meta \<Rightarrow> fold_thy0 meta thy_instance
                    | META_def_base_l meta \<Rightarrow> fold_thy0 meta thy_def_base_l
                    | META_def_state floor meta \<Rightarrow> fold_thy0 meta (thy_def_state floor)
                    | META_def_transition floor meta \<Rightarrow> fold_thy0 meta (thy_def_transition floor)
@@ -660,6 +666,7 @@ definition "fold_thy' f_env_save f_try f_accu_reset f =
    | META_ass_class Floor1 (OclAssClass meta_ass meta_class) \<Rightarrow>
        comp_env_input_class_rm (comp_env_input_class_bind [ fold_thy0 meta_ass thy_association
                                                       , fold_thy0 meta_class thy_class_flat ])
+   | META_haskell meta \<Rightarrow> comp_env_input_class_mk (fold_thy0 meta thy_haskell)
    | META_class_synonym meta \<Rightarrow> comp_env_input_class_rm (fold_thy0 meta thy_class_synonym)
    | META_class_tree meta \<Rightarrow> comp_env_input_class_rm (fold_thy0 meta thy_class_tree)
    | META_instance meta \<Rightarrow> comp_env_input_class_mk (fold_thy0 meta thy_instance)

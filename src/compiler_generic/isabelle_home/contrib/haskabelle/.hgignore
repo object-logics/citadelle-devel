@@ -1,0 +1,16 @@
+syntax: glob
+
+bin/haskabelle_bin
+
+doc/haskabelle.pdf
+
+ex/dst_hs
+ex/dst_thy
+
+lib/texinputs
+
+.*
+*~
+\#*\#
+build/
+log/

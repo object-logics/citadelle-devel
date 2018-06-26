@@ -1,0 +1,82 @@
+#!/bin/bash
+#
+# Author: Florian Haftmann, TU Muenchen
+#
+# Roundtrip for all Haskell files in the examples directory.
+#
+# Must be run in an isabelle environment (e.g. via "isabelle env")
+
+## diagnostics
+
+function fail()
+{
+  echo "$1" >&2
+  exit 2
+}
+
+cd "$HASKABELLE_HOME"
+
+## cleaning
+
+if [ "$1" == "clean" ]
+then
+  rm -v ex/dst_thy/* ex/dst_hs/*
+  exit 0
+fi
+
+## operating mode
+
+if [ "$1" == "no_reimport" ]
+then
+  REIMPORT=""
+else
+  REIMPORT=1
+  if [ "$1" == "no_abort" ]
+  then
+    ABORT=""
+  else
+    ABORT=1
+  fi
+fi
+
+function fail_or_warn()
+{
+  if [ $ABORT ]
+  then fail "$1"
+  else
+    echo "$1" >&2
+  fi
+}
+
+
+## testing
+
+for SRC in ex/src_hs/*.hs
+do
+  DST=ex/dst_thy/
+  echo "importing $SRC..."
+  "$HASKABELLE_HOME/lib/Tools/haskabelle" -t "$SRC" "$DST" || fail "Could not import $SRC"
+done
+
+## re-importing
+
+if [ $REIMPORT ]
+then
+  cd ex/dst_thy/
+  export REGRESSION_PATH=$(pwd)
+  export REGRESSION_DST="$(pwd)/../../ex/dst_hs/"
+  mkdir -p "$REGRESSION_DST"
+  echo 'session "dst_thy" = "HOL" + options [document = false, quick_and_dirty = true] theories '$(basename -s '.thy' *.thy) > ROOT
+  echo "re-importing all theories..."
+  "$ISABELLE_TOOL" build -c -D. > /dev/zero 2>&1 || fail_or_warn "Could not re-import all theories"
+  for THY in *.thy
+  do
+    THY_NAME="$(basename $THY .thy)"
+    HS_FILE="$REGRESSION_DST$THY_NAME.hs"
+    if [ ! -e "$HS_FILE" ]
+    then
+      fail "Something went wrong generating $HS_FILE"
+    fi
+  done
+fi
+

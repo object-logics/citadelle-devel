@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# Author: Florian Haftmann, TU Muenchen
+#
+# Building the Haskabelle documentation
+#
+# Must be run in an isabelle environment (e.g. via "isabelle env")
+
+## environment
+
+PRG="$(basename "$0")"
+HASKABELLE_HOME="$(cd "$(dirname "$0")"; cd "$(pwd -P)"; cd ..; pwd)"
+
+## diagnostics
+
+function fail()
+{
+  echo "$1" >&2
+  exit 2
+}
+
+## building
+
+FORMATS="false dvi pdf"
+
+OUTPUT="$ISABELLE_TMP_PREFIX$$"
+mkdir -p "$OUTPUT" || fail "Bad directory: \"$OUTPUT\""
+
+RC=0
+for FORMAT in $FORMATS
+do
+  if [ "$RC" = 0 ]; then
+    $ISABELLE_TOOL build -D "$HASKABELLE_HOME/doc-src" -c \
+        -o browser_info=false -o "document=$FORMAT" \
+        -o "document_output=$OUTPUT"
+    RC=$?
+  fi
+done
+
+if [ "$RC" = 0 ]; then
+  cp -f "$OUTPUT"/*.dvi "$OUTPUT"/*.pdf "$HASKABELLE_HOME/doc/"
+fi
+
+rm -r "$OUTPUT"
+
+[ $RC -eq 0 ] || fail "building documentation sources failed"

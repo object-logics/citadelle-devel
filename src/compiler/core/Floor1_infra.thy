@@ -60,12 +60,12 @@ definition "print_infra_datatype_class_1 = start_map'' O.datatype o (\<lambda>ex
   (\<lambda>isub_name name _ l_attr l_inherited l_cons.
     let (l_attr, l_inherited) = base_attr' (l_attr, of_inh l_inherited)
       ; map_ty = L.map ((\<lambda>x. Typ_apply (Typ_base \<open>option\<close>) [str_hol_of_ty_all Typ_apply Typ_base x]) o snd) in
-    [ Datatype
+    [ Datatype'
         (isub_name datatype_ext_name)
         (  (L.rev_map (\<lambda>x. ( datatype_ext_constr_name @@ mk_constr_name name x
                          , [Raw (datatype_name @@ String.isub x)])) (of_sub l_cons))
         @@@@ [(isub_name datatype_ext_constr_name, Raw const_oid # L.maps map_ty l_inherited)])
-    , Datatype
+    , Datatype'
         (isub_name datatype_name)
         [ (isub_name datatype_constr_name, Raw (isub_name datatype_ext_name) # map_ty l_attr ) ] ]) expr)"
 
@@ -75,12 +75,12 @@ definition \<open>print_latex_infra_datatype_class = start_map'' O.datatype o (\
       ; map_ty = L.map ((\<lambda>x. Typ_apply (Typ_base \<open>option\<close>) [str_hol_of_ty_all Typ_apply Typ_base x]) o snd)
       ; n1 = \<open>{ext}\<close>
       ; n2 = \<open>{ty}\<close> in
-    [ Datatype
+    [ Datatype'
         (\<open>\operatorname{\<close> @@ name @@ \<open>}_\<close> @@ n1 @@ \<open>\<close>)
         (  (L.rev_map (\<lambda>x. ( \<open>\operatorname{mk}_\text{\<close> @@ name @@ \<open>\_\<close> @@ x @@ \<open>}\<close>
                          , [Raw (\<open>\operatorname{\<close> @@ x @@ \<open>}_\<close> @@ n2 @@ \<open>\<close>)])) (of_sub l_cons))
         @@@@ [(\<open>\operatorname{mk}_\text{\<close> @@ name @@ \<open>}\<close>, Raw const_oid # L.maps map_ty l_inherited)])
-    , Datatype
+    , Datatype'
         (\<open>\operatorname{\<close> @@ name @@ \<open>}_\<close> @@ n2 @@ \<open>\<close>)
         [ (\<open>\operatorname{mkoid}_\text{\<close> @@ name @@ \<open>}\<close>, Raw (\<open>\operatorname{\<close> @@ name @@ \<open>}_\<close> @@ n1 @@ \<open>\<close>) # map_ty l_attr ) ] ]) expr)\<close>
 
@@ -89,17 +89,17 @@ definition "print_infra_datatype_class_2 = start_map'' O.datatype o (\<lambda>ex
     let (l_attr, l_inherited) = base_attr' (l_attr, of_inh l_inherited)
       ; map_ty = L.map ((\<lambda>x. Typ_apply (Typ_base \<open>option\<close>) [str_hol_of_ty_all Typ_apply Typ_base x]) o snd)
       ; l =
-    [ Datatype
+    [ Datatype'
         (isub_name datatype'_ext'_name)
         ([(isub_name datatype'_ext_constr_name, L.flatten [ map_ty l_attr
                                                           , if l_cons = [] then [] else [ Opt (isub_name datatype'_ext_name) ]])])
-    , Datatype
+    , Datatype'
         (isub_name datatype'_name)
         [(isub_name datatype'_constr_name, L.flatten [ Raw const_oid # L.maps map_ty l_inherited
                                                      , [ Raw (isub_name datatype'_ext'_name) ]])]] in
     if l_cons = [] then l
     else
-      Datatype
+      Datatype'
         (isub_name datatype'_ext_name)
         (L.rev_map (\<lambda> OclClass x _ _ \<Rightarrow>
                         ( datatype'_ext_constr_name @@ mk_constr_name name x
@@ -330,7 +330,7 @@ sorry sorry sorry sorry
 *)
 
 definition "print_infra_datatype_universe expr = start_map O.datatype
-  [ Datatype \<open>\<AA>\<close>
+  [ Datatype' \<open>\<AA>\<close>
       (map_class (\<lambda>isub_name _ _ _ _ _. (isub_name datatype_in, [Raw (isub_name datatype_name)])) expr) ]"
 
 definition "print_infra_enum_syn _ env = (\<lambda>f1 f2. (L.flatten [f1 (D_input_meta env), f2 (fst (find_class_ass env))], env))

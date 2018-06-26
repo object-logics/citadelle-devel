@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# Author: Florian Haftmann, TU Muenchen
+#
+# Shell interface for adaption table builder.
+#
+# Must be run in an isabelle environment (e.g. via "isabelle env")
+
+## environment
+
+PRG="$(basename "$0")"
+HASKABELLE_HOME="$(cd "$(dirname "$0")"; cd "$(pwd -P)"; cd ..; pwd)"
+
+## diagnostics
+
+function fail()
+{
+  echo "$1" >&2
+  exit 2
+}
+
+## parameters
+
+if [ "$1" == "" ]
+then
+  DIR="$HASKABELLE_HOME/default"
+else
+  DIR="$1"
+fi
+
+## file names
+
+MK_ADAPT_LOC="$HASKABELLE_HOME/lib/mk_adapt.ML"
+SRC_LOC="$DIR/adapt.txt"
+DST_LOC="$DIR/Generated_Adapt.hs"
+PRELUDE_NAME="Prelude"
+PRELUDE_NAME_FULL="Draft.$PRELUDE_NAME"
+PRELUDE_LOC="$DIR/$PRELUDE_NAME"
+
+## convert
+
+FORMAL_CMD="Runtime.toplevel_program (fn () => (use_thy prelude_loc; ML_Context.eval_source_in \
+    (SOME (Proof_Context.init_global (Thy_Info.get_theory prelude_name))) \
+    ML_Compiler.flags \
+    (Input.source true ml_cmd Position.no_range))) \
+  handle _ => OS.Process.exit OS.Process.failure;"
+
+ACTUAL_CMD="val prelude_loc = \"$PRELUDE_LOC\"; \
+  val prelude_name = \"$PRELUDE_NAME_FULL\"; \
+  val src_loc = \"$SRC_LOC\"; \
+  val dst_loc = \"$DST_LOC\"; \
+  val mk_adapt_path = Path.explode \"$MK_ADAPT_LOC\"; \
+  fun eval_file path = ML_Context.eval_file \
+    (ML_Compiler.verbose true ML_Compiler.flags) path; \
+  val ml_cmd = \"eval_file mk_adapt_path; Mk_Adapt.run prelude_name src_loc dst_loc\"; \
+  $FORMAL_CMD"
+
+"$ISABELLE_TOOL" process -e "$ACTUAL_CMD" -l HOL || fail "Building adaptation table failed."

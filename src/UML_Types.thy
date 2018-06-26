@@ -52,6 +52,8 @@ keywords "Assert" :: thy_decl
      and "Assert_local" :: thy_decl
 begin
 
+(* declare[[syntax_ambiguity_warning = false]] *)
+
 section{* Preliminaries *}
 subsection{* Notations for the Option Type *}
 
@@ -67,17 +69,11 @@ no_notation floor  ("\<lfloor>_\<rfloor>") (* For Real Numbers only ... Otherwis
 type_notation option ("\<langle>_\<rangle>\<^sub>\<bottom>") (* NOTE: "_\<^sub>\<bottom>" also works *)
 notation Some ("\<lfloor>(_)\<rfloor>")
 notation None ("\<bottom>")
+notation the ("\<lceil>(_)\<rceil>")
 
 text{* These commands introduce an alternative, more compact notation for the type constructor
  @{typ "'\<alpha> option"}, namely @{typ "\<langle>'\<alpha>\<rangle>\<^sub>\<bottom>"}. Furthermore, the constructors @{term "Some X"} and
  @{term "None"} of the type @{typ "'\<alpha> option"}, namely @{term "\<lfloor>X\<rfloor>"} and @{term "\<bottom>"}. *}
-
-text{*
-  The following function (corresponding to @{term the} in the Isabelle/HOL library)
-  is defined as the inverse of the injection @{term Some}.
-*}
-fun    drop :: "'\<alpha> option \<Rightarrow> '\<alpha>" ("\<lceil>(_)\<rceil>")
-where  drop_lift[simp]: "\<lceil>\<lfloor>v\<rfloor>\<rceil> = v"
 
 text{* The definitions for the constants and operations based on functions
 will be geared towards a format that Isabelle can check to be a ``conservative''

@@ -47,9 +47,7 @@ begin
 
 type_notation option ("\<langle>_\<rangle>\<^sub>\<bottom>") (* NOTE: "_\<^sub>\<bottom>" also works *)
 notation Some ("\<lfloor>(_)\<rfloor>")
-
-fun    drop :: "'\<alpha> option \<Rightarrow> '\<alpha>" ("\<lceil>(_)\<rceil>")
-where  drop_lift[simp]: "\<lceil>\<lfloor>v\<rfloor>\<rceil> = v"
+notation the ("\<lceil>(_)\<rceil>")
 
 
 type_synonym oid = nat

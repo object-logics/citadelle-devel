@@ -58,11 +58,19 @@ datatype semi__typ = Typ_apply semi__typ "semi__typ list"
                    | Typ_apply_paren string (* left *) string (* right *) semi__typ
                    | Typ_base string
 
-datatype "datatype" = Datatype string (* name *)
-                               "(string (* name *) \<times> semi__typ list (* arguments *)) list" (* constructors *)
+datatype semi__datatype_version = Datatype_new
+                                | Datatype_old
+                                | Datatype_old_atomic
+                                | Datatype_old_atomic_sub
 
-datatype "type_synonym" = Type_synonym string (* name *)
-                                       "string list" (* parametric variables *)
+datatype "datatype" = Datatype semi__datatype_version
+                               "(( string (* name *)
+                                 \<times> string list (* arguments *))
+                                \<times> (string (* name *) \<times> semi__typ list (* arguments *)) list (* constructors *))
+                                list (* mutual recursivity *)"
+
+datatype "type_synonym" = Type_synonym "( string (* name *)
+                                        \<times> string list (* parametric variables *))"
                                        semi__typ (* content *)
 
 datatype semi__term = Term_rewrite semi__term (* left *) string (* symb rewriting *) semi__term (* right *)
@@ -73,6 +81,7 @@ datatype semi__term = Term_rewrite semi__term (* left *) string (* symb rewritin
                     | Term_apply semi__term "semi__term list"
                     | Term_paren string (* left *) string (* right *) semi__term
                     | Term_if_then_else semi__term semi__term semi__term
+                    | Term_let semi__term (* left *) semi__term (* right *) semi__term (* body *)
                     | Term_term "string list" (* simulate a pre-initialized context (de bruijn variables under "lam") *)
                                 "term" (* usual continuation of inner syntax term *)
 
@@ -246,8 +255,9 @@ lemmas [code] =
 
 definition "Opt s = Typ_apply (Typ_base \<open>option\<close>) [Typ_base s]"
 definition "Raw = Typ_base"
-definition "Type_synonym' n = Type_synonym n []"
-definition "Type_synonym'' n l f = Type_synonym n l (f l)"
+definition "Datatype' n l = Datatype Datatype_new [((n, []), l)]"
+definition "Type_synonym' n = Type_synonym (n, [])"
+definition "Type_synonym'' n l f = Type_synonym (n, l) (f l)"
 definition "Term_annot' e s = Term_annot e (Typ_base s)"
 definition "Term_lambdas s = Term_bind \<open>\<lambda>\<close> (Term_basic s)"
 definition "Term_lambda x = Term_lambdas [x]"
@@ -269,6 +279,7 @@ definition "Term_pair e1 e2 = Term_parenthesis (Term_binop e1 \<open>,\<close> e
 definition "Term_pair' l = (case l of [] \<Rightarrow> Term_basic [\<open>()\<close>] | _ \<Rightarrow> Term_paren \<open>(\<close> \<open>)\<close> (term_binop \<open>,\<close> l))"
 definition "Term_pairs' f l = Term_pair' (L.map f l)"
 definition \<open>Term_string s = Term_basic [S.flatten [\<open>"\<close>, s, \<open>"\<close>]]\<close>
+definition "Term_string' s = Term_basic [S.flatten [\<open>\\\<close>, \<open><open>\<close>, s, \<open>\\\<close>, \<open><close>\<close>]]"
 definition "Term_applys0 e l = Term_parenthesis (Term_apply e (L.map Term_parenthesis l))"
 definition "Term_applys e l = Term_applys0 (Term_parenthesis e) l"
 definition "Term_app e = Term_applys0 (Term_basic [e])"

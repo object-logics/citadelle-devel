@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+#
+# Author: Lars Noschinski
+#
+# DESCRIPTION: Haskabelle interface wrapper
+
+## diagnostics
+
+PRG="$(basename "$0")"
+
+DEFAULT_ADAPT_DIR="$HASKABELLE_HOME_USER/default"
+DEFAULT_ADAPT_SRC="$HASKABELLE_HOME/default"
+
+function usage()
+{
+  echo
+  echo "Usage: isabelle $PRG [OPTIONS] [SRC... DST]"
+  echo
+  echo "  Options are:"
+  echo "    SRC...     list of haskell source files"
+  echo "    DST        destination directory"
+  echo "    -a DIR     custom adaptation table (default $DEFAULT_ADAPT_DIR)"
+  echo "    -c CONFIG  configuration file"
+  echo "    -e         runs the Haskabelle examples"
+  echo "    -r         rebuild adaptation table"
+  echo "    -t         generate a theory with at the end a command exporting everything to Haskell"
+  echo "    -v         show Haskabelle version"
+  echo
+  echo "At least one of SRC... DST, -c or -r must be given. Not both of"
+  echo "[SRC... DST] and -c may be used at the same time."
+  echo
+  echo "Given SRC... DST, import Haskell files SRC... into Isabelle theories"
+  echo "in directory DST. Given -c, import files according to the"
+  echo "configuration file."
+  echo
+  exit 1
+}
+
+function die()
+{
+  echo "$1" >&2
+  exit 1
+}
+
+function fail()
+{
+  echo "$1" >&2
+  exit 2
+}
+
+
+## process command line
+
+# options
+
+ADAPT_DIR=""
+BUILD_ADAPT=false
+CONFIG_FILE=""
+RUN_EXAMPLES=false
+EXPORT_CODE=false
+SHOW_VERSION=false
+
+function getoptions()
+{
+  OPTIND=1
+  while getopts "a:bc:ertv" OPT
+  do
+    case "$OPT" in
+      a)
+        ADAPT_DIR="$OPTARG"
+        ;;
+      c)
+        CONFIG_FILE="$OPTARG"
+        ;;
+      e)
+        RUN_EXAMPLES=true
+        ;;
+      r)
+        BUILD_ADAPT=true
+        ;;
+      t)
+        EXPORT_CODE=true
+        ;;
+      v)
+        SHOW_VERSION=true
+        ;;
+      \?)
+        usage
+        ;;
+    esac
+  done
+
+  if [[ "$ADAPT_DIR" = "" &&
+      ( ! -f "$DEFAULT_ADAPT_DIR"/Generated_Adapt.hs || "$BUILD_ADAPT" = true ) ]]; then
+    echo "Prepare (re)building the default adaptation table ..."
+    mkdir -p "$DEFAULT_ADAPT_DIR" &&
+    cp "$DEFAULT_ADAPT_SRC"/* "$DEFAULT_ADAPT_DIR" &&
+    BUILD_ADAPT=true ||
+    die "Rebuilding preparations for default adaptation table failed."
+  fi
+
+  ADAPT_DIR=${ADAPT_DIR:-$DEFAULT_ADAPT_DIR}
+}
+
+getoptions "$@"
+shift $(($OPTIND - 1))
+
+
+## build
+
+# haskabelle binary
+
+HASKABELLE_BIN="$HASKABELLE_HOME/bin/haskabelle_bin"
+
+if [ -n "$ISABELLE_GHC" ]; then
+  BUILDDIR=build
+  (
+  cd "$HASKABELLE_HOME"
+  mkdir -p "$BUILDDIR" || fail "Cannot create directory $BUILDDIR"
+  mkdir -p bin || fail "Cannot create directory bin"
+  $ISABELLE_GHC -package haskell-src-exts-1.20.1 --make -O -o bin/haskabelle_bin \
+      -odir "$BUILDDIR" -hidir "$BUILDDIR" -stubdir "$BUILDDIR" "Main.hs"
+  ) || fail "Cannot build source. See Haskabelle documentation."
+elif [ ! -e "$HASKABELLE_BIN" ]; then
+  fail "ISABELLE_GHC must be set to build Haskabelle. See Haskabelle documentation."
+fi
+
+
+# adaptation table
+
+if [ "$BUILD_ADAPT" = true ]; then
+  echo "$HASKABELLE_HOME/lib/mk_adapt" $ADAPT_DIR
+  "$HASKABELLE_HOME/lib/mk_adapt" $ADAPT_DIR || exit $?
+fi
+
+
+## main
+
+if [ "$SHOW_VERSION" = true ]; then
+  "$HASKABELLE_BIN" --version
+elif [ "$RUN_EXAMPLES" = true ]; then
+  "$HASKABELLE_HOME/lib/regression" "$@"
+elif [ "$CONFIG_FILE" != "" ]; then
+  "$HASKABELLE_BIN" --internal "$ADAPT_DIR" --export "$EXPORT_CODE" --config "$CONFIG_FILE" || exit $?
+elif [ "$#" -ge 2 ]; then
+  "$HASKABELLE_BIN" --internal "$ADAPT_DIR" --export "$EXPORT_CODE" --files "$@" || exit $?
+elif [ "$BUILD_ADAPT" = false ]; then
+  usage
+fi

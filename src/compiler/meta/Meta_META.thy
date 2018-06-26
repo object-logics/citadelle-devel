@@ -49,6 +49,7 @@ section\<open>Regrouping Together All Existing Meta-Models\<close>
 theory  Meta_META
 imports Meta_UML
         Meta_UML_extended
+        Meta_HKB
         "../../compiler_generic/meta_isabelle/Meta_Isabelle"
 begin
 
@@ -95,6 +96,9 @@ datatype all_meta_embedding =
                             | META_association ocl_association
                             | META_ass_class floor ocl_ass_class
                             | META_ctxt floor ocl_ctxt
+
+                              (* Haskell *)
+                            | META_haskell IsaUnit
 
                               (* invented *)
                             | META_class_synonym ocl_class_synonym

@@ -229,7 +229,7 @@ fun excursion keywords master_dir last_timing init elements =
     fun prepare_span st = fn
       Span_cmd span =>
         Command_Span.content span
-        |> Command.read keywords (Command.read_thy st) master_dir init ([], ~1)
+        |> Command.read keywords (Command.read_thy st) (Toplevel.proof_of' st) master_dir init ([], ~1)
         |> map (fn tr => Toplevel.put_timing (last_timing tr) tr)
     | Span_tr tr => [tr];
 
@@ -448,7 +448,7 @@ fun use_thy name =
 fun script_thy pos txt thy =
   let
     val trs =
-      Outer_Syntax.parse thy pos txt
+      Outer_Syntax.parse thy NONE pos txt
       |> map (Toplevel.modify_init (K thy));
     val end_pos = if null trs then pos else Toplevel.pos_of (List.last (List.last trs));
     val end_state = fold (fold (Toplevel.command_exception true)) trs Toplevel.toplevel;

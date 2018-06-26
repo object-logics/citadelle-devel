@@ -105,7 +105,7 @@ lemma Integer_subtype_of_Real:
   shows   "\<tau> \<Turnstile> X ->oclAsType\<^sub>I\<^sub>n\<^sub>t(Real) ->oclAsType\<^sub>R\<^sub>e\<^sub>a\<^sub>l(Integer) \<triangleq> X"
   apply(insert assms,  simp add: OclAsInteger\<^sub>R\<^sub>e\<^sub>a\<^sub>l_def OclAsReal\<^sub>I\<^sub>n\<^sub>t_def OclValid_def StrongEq_def)
   apply(subst (2 4) cp_defined, simp add: true_def)
-  by (metis assms bot_option_def drop.elims foundation16 null_option_def)
+  by (metis assms bot_option_def foundation16 null_option_def option.exhaust_sel)
 
 subsection{* Definition: asPair *}
 

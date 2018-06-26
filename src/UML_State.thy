@@ -328,7 +328,7 @@ assumes "\<And>x. \<sigma>' oid = Some x \<Longrightarrow> x = Object"
   shows "(OclAllInstances_generic pre_post Type)
          (mk \<lparr>heap=\<sigma>'(oid\<mapsto>Object), assocs=A\<rparr>)
          =
-         ((OclAllInstances_generic pre_post Type)->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> drop (Type Object) \<rfloor>\<rfloor>))
+         ((OclAllInstances_generic pre_post Type)->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> the (Type Object) \<rfloor>\<rfloor>))
          (mk \<lparr>heap=\<sigma>',assocs=A\<rparr>)"
 proof -
  have drop_none : "\<And>x. x \<noteq> None \<Longrightarrow> \<lfloor>\<lceil>x\<rceil>\<rfloor> = x"
@@ -364,9 +364,10 @@ shows   "(OclAllInstances_generic pre_post Type)
          (mk \<lparr>heap=\<sigma>'(oid\<mapsto>Object), assocs=A\<rparr>)
          =
          ((\<lambda>_. (OclAllInstances_generic pre_post Type)
-                 (mk \<lparr>heap=\<sigma>', assocs=A\<rparr>))->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> drop (Type Object) \<rfloor>\<rfloor>))
+                 (mk \<lparr>heap=\<sigma>', assocs=A\<rparr>))->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> the (Type Object) \<rfloor>\<rfloor>))
          (mk \<lparr>heap=\<sigma>'(oid\<mapsto>Object), assocs=A\<rparr>)"
- apply(subst state_update_vs_allInstances_generic_including', (simp add: assms)+,
+ apply(subst state_update_vs_allInstances_generic_including',
+       simp add: assms, simp add: assms, simp add: assms,
        subst UML_Set.OclIncluding.cp0,
        simp add: UML_Set.OclIncluding_def)
  apply(subst (1 3) cp_defined[symmetric],
@@ -541,7 +542,7 @@ assumes "\<And>x. \<sigma>' oid = Some x \<Longrightarrow> x = Object"
   shows "(Type .allInstances())
          (\<sigma>, \<lparr>heap=\<sigma>'(oid\<mapsto>Object), assocs=A\<rparr>)
          =
-         ((Type .allInstances())->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> drop (Type Object) \<rfloor>\<rfloor>))
+         ((Type .allInstances())->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> the (Type Object) \<rfloor>\<rfloor>))
          (\<sigma>, \<lparr>heap=\<sigma>',assocs=A\<rparr>)"
 unfolding OclAllInstances_at_post_def
 by(rule state_update_vs_allInstances_generic_including'[OF snd_conv], insert assms)
@@ -554,7 +555,7 @@ shows   "(Type .allInstances())
          (\<sigma>, \<lparr>heap=\<sigma>'(oid\<mapsto>Object), assocs=A\<rparr>)
          =
          ((\<lambda>_. (Type .allInstances())
-                 (\<sigma>, \<lparr>heap=\<sigma>', assocs=A\<rparr>))->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> drop (Type Object) \<rfloor>\<rfloor>))
+                 (\<sigma>, \<lparr>heap=\<sigma>', assocs=A\<rparr>))->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> the (Type Object) \<rfloor>\<rfloor>))
          (\<sigma>, \<lparr>heap=\<sigma>'(oid\<mapsto>Object), assocs=A\<rparr>)"
 unfolding OclAllInstances_at_post_def
 by(rule state_update_vs_allInstances_generic_including[OF snd_conv], insert assms)
@@ -651,7 +652,7 @@ assumes "\<And>x. \<sigma>' oid = Some x \<Longrightarrow> x = Object"
   shows "(Type .allInstances@pre())
          (\<lparr>heap=\<sigma>'(oid\<mapsto>Object), assocs=A\<rparr>, \<sigma>)
          =
-         ((Type .allInstances@pre())->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> drop (Type Object) \<rfloor>\<rfloor>))
+         ((Type .allInstances@pre())->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> the (Type Object) \<rfloor>\<rfloor>))
          (\<lparr>heap=\<sigma>',assocs=A\<rparr>, \<sigma>)"
 unfolding OclAllInstances_at_pre_def
 by(rule state_update_vs_allInstances_generic_including'[OF fst_conv], insert assms)
@@ -664,7 +665,7 @@ shows   "(Type .allInstances@pre())
          (\<lparr>heap=\<sigma>'(oid\<mapsto>Object), assocs=A\<rparr>, \<sigma>)
          =
          ((\<lambda>_. (Type .allInstances@pre())
-                 (\<lparr>heap=\<sigma>', assocs=A\<rparr>, \<sigma>))->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> drop (Type Object) \<rfloor>\<rfloor>))
+                 (\<lparr>heap=\<sigma>', assocs=A\<rparr>, \<sigma>))->including\<^sub>S\<^sub>e\<^sub>t(\<lambda> _. \<lfloor>\<lfloor> the (Type Object) \<rfloor>\<rfloor>))
          (\<lparr>heap=\<sigma>'(oid\<mapsto>Object), assocs=A\<rparr>, \<sigma>)"
 unfolding OclAllInstances_at_pre_def
 by(rule state_update_vs_allInstances_generic_including[OF fst_conv], insert assms)
@@ -887,7 +888,7 @@ proof -
   apply(simp only: OclNot3[symmetric], simp only: not_inj)
   apply(simp add: StrictRefEq\<^sub>O\<^sub>b\<^sub>j\<^sub>e\<^sub>c\<^sub>t_def split: if_split_asm)
     apply(subgoal_tac "x \<tau> \<noteq> null \<and> x' \<noteq> null", simp)
-    apply (metis (mono_tags) drop.simps def_x foundation16[THEN iffD1] true_def)
+   using def_X' def_x foundation16 apply blast
  by(simp add: invalid_def bot_option_def true_def)+
 
  have P_true : "\<forall>x\<in>\<lceil>\<lceil>Rep_Set\<^sub>b\<^sub>a\<^sub>s\<^sub>e (X \<tau>)\<rceil>\<rceil>. P (\<lambda>_. x) \<tau> = true \<tau> \<Longrightarrow>

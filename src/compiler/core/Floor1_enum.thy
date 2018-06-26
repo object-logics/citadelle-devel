@@ -58,7 +58,7 @@ definition "print_enum = (\<lambda> OclEnum name_ty l \<Rightarrow> Pair
     ; name_ty_base' = pref_generic_enum name_ty
     ; uu = \<open>'\<AA>\<close> in
   L.flatten
-  [ [ O.datatype (Datatype (pref_ty_enum name_ty) (L.map (\<lambda>constr. (pref_constr_enum constr, [])) l))
+  [ [ O.datatype (Datatype' (pref_ty_enum name_ty) (L.map (\<lambda>constr. (pref_constr_enum constr, [])) l))
     , O.type_synonym (Type_synonym' name_ty_base (option (option (Typ_base (pref_ty_enum name_ty)))))
     , O.type_synonym (Type_synonym'' name_ty_base' [uu] (\<lambda> [u] \<Rightarrow> Typ_apply (Typ_base \<open>val\<close>) [Typ_base u, Typ_base name_ty_base]))
     , O.overloading

@@ -50,6 +50,7 @@ theory  Parser_META
 imports Meta_META
         Parser_UML
         Parser_UML_extended
+        Parser_HKB
 begin
 
 subsection\<open>Building Recursors for Records\<close> (* NOTE part to be automated *)
@@ -108,6 +109,8 @@ definition "of_all_meta_embedding a b = rec_all_meta_embedding
   (ap1 a (b \<open>META_association\<close>) (of_ocl_association a b (K of_unit)))
   (ap2 a (b \<open>META_ass_class\<close>) (of_floor a b) (of_ocl_ass_class a b))
   (ap2 a (b \<open>META_ctxt\<close>) (of_floor a b) (of_ocl_ctxt a b (K of_unit)))
+
+  (ap1 a (b \<open>META_haskell\<close>) (of_IsaUnit a b))
 
   (ap1 a (b \<open>META_class_synonym\<close>) (of_ocl_class_synonym a b))
   (ap1 a (b \<open>META_instance\<close>) (of_ocl_instance a b))

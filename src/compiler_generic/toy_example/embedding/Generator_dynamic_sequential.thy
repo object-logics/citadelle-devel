@@ -44,6 +44,7 @@ section\<open>Dynamic Meta Embedding with Reflection\<close>
 theory Generator_dynamic_sequential
 imports Printer
         "../../isabelle_home/src/HOL/Isabelle_Main2"
+        "~~/src/HOL/Library/Old_Datatype"
 (*<*)
   keywords (* Toy language *)
            "Between"
@@ -139,7 +140,7 @@ ML\<open>
 structure From = struct
  val string = META.SS_base o META.ST
  val binding = string o Binding.name_of
- (*fun term ctxt s = string (XML.content_of (YXML.parse_body (Syntax.string_of_term ctxt s)))*)
+ (*fun term ctxt s = string (YXML.content_of (Syntax.string_of_term ctxt s))*)
  val nat = Code_Numeral.natural_of_integer
  val internal_oid = META.Oid o nat
  val option = Option.map
@@ -202,10 +203,19 @@ structure Outer_Syntax' = struct
     Outer_Syntax.command name_pos comment
       (parse >> (fn f =>
         Toplevel.theory (fn thy =>
-          fold snd (f thy) [] |> rev
-                              |> (fn tr => fold (fn Toplevel'.Theory f => f
-                                                  | Toplevel'.Keep f => tap f
-                                                  | Toplevel'.Read_Write _ => I) tr thy))))
+          fold snd (f thy NONE) [] |> rev
+                                   |> (fn tr => fold (fn Toplevel'.Theory f => f
+                                                       | Toplevel'.Keep f => tap f
+                                                       | Toplevel'.Read_Write _ => I) tr thy))))
+end
+
+structure Old_Datatype_Aux' = struct
+  fun default_config' n =
+    if n = 0 then
+      Old_Datatype_Aux.default_config
+    else
+      let val _ = warning "Type of datatype not available in this running version of Isabelle"
+      in Old_Datatype_Aux.default_config end
 end
 \<close>
 
@@ -454,18 +464,29 @@ fun end' top =
 structure Cmd = struct open META open META_overload
 fun input_source ml = Input.source false (of_semi__term' ml) (Position.none, Position.none)
 
-fun datatype' top (Datatype (n, l)) = #local_theory top NONE NONE
+fun datatype' top (Datatype (version, l)) = 
+  case version of Datatype_new => #local_theory top NONE NONE
   (BNF_FP_Def_Sugar.co_datatype_cmd
     BNF_Util.Least_FP
     BNF_LFP.construct_lfp
     (Ctr_Sugar.default_ctr_options_cmd,
-     [( ( ( (([], To_sbinding n), NoSyn)
-          , List.map (fn (n, l) => ( ( (To_binding "", To_sbinding n)
-                                     , List.map (fn s => (To_binding "", of_semi__typ s)) l)
-                                   , NoSyn)) l)
-        , (To_binding "", To_binding "", To_binding ""))
-      , [])]))
-fun type_synonym top (Type_synonym (n, v, l)) = #theory top (fn thy => let val s_bind = To_sbinding n in
+     (map (fn ((n, v), l) =>
+            ( ( ( ((map (fn v => (SOME (To_binding ""), (To_string0 v, NONE))) v, To_sbinding n), NoSyn)
+                , List.map (fn (n, l) => ( ( (To_binding "", To_sbinding n)
+                                           , List.map (fn s => (To_binding "", of_semi__typ s)) l)
+                                         , NoSyn)) l)
+              , (To_binding "", To_binding "", To_binding ""))
+            , [])) l)))
+  | _ => #theory top
+  ((snd oo Old_Datatype.add_datatype_cmd
+     (Old_Datatype_Aux'.default_config'
+       (case version of Datatype_old => 0 | Datatype_old_atomic => 1 | _ => 2)))
+    (map (fn ((n, v), l) =>
+           ( (To_sbinding n, map (fn v => (To_string0 v, NONE)) v, NoSyn)
+           , List.map (fn (n, l) => (To_sbinding n, List.map of_semi__typ l, NoSyn)) l))
+         l))
+
+fun type_synonym top (Type_synonym ((n, v), l)) = #theory top (fn thy => let val s_bind = To_sbinding n in
   (snd o Typedecl.abbrev_global
            (s_bind, map To_string0 v, NoSyn)
            (Isabelle_Typedecl.abbrev_cmd0 (SOME s_bind) thy (of_semi__typ l))) thy end)
@@ -981,11 +1002,11 @@ val compiler = let open Export_code_env in
                       SML.Filename.stdout ml_ext_ml ^ "\"]))"
                   , "use \"" ^ SML.Filename.argument ml_ext_ml ^ "\"" ]
              , ml let val arg = "argument" in
-                  [ "val " ^ arg ^ " = XML.content_of (YXML.parse_body (@{make_string} (" ^
+                  [ "val " ^ arg ^ " = YXML.content_of (@{make_string} (" ^
                     ml_module ^ "." ^
                     mk_free (Proof_Context.init_global thy)
                             Isabelle.argument_main
-                            ([]: (string * string) list) ^ ")))"
+                            ([]: (string * string) list) ^ "))"
                   , "use \"" ^ SML.Filename.function ml_ext_ml ^ "\""
                   , "ML_Context.eval_source (ML_Compiler.verbose false ML_Compiler.flags) (Input.source false (\"let open " ^
                       ml_module ^ " in " ^ Isabelle.function ^ " (\" ^ " ^ arg ^
@@ -1396,7 +1417,7 @@ fun disp_time toplevel_keep_output =
                           (Pretty.str msg)) end
   in (tps, disp_time) end
 
-fun thy_deep0 exec_deep l_obj =
+fun thy_deep exec_deep l_obj =
   Generation_mode.mapM_deep
     (META.mapM (fn (env, i_deep) =>
       pair (META.fold_thy_deep l_obj env, i_deep)
@@ -1410,16 +1431,13 @@ fun thy_deep0 exec_deep l_obj =
                           , skip_exportation = #skip_exportation i_deep }
                           ( META.d_output_header_thy_update (K NONE) env, l_obj))))
 
-fun thy_deep get_all_meta_embed mode thy =
-  thy_deep0 (tap oo exec_deep0) (get_all_meta_embed (SOME thy)) mode thy
-
 fun report m f = (Method.report m; f)
 fun report_o o' f = (Option.map Method.report o'; f)
 
-fun thy_shallow get_all_meta_embed =
+fun thy_shallow l_obj get_all_meta_embed =
   Generation_mode.mapM_shallow
-    (META.mapM
-      (fn (env, thy0) => fn thy =>
+    (fn l_shallow => fn thy => META.mapM
+      (fn (env, thy0) => fn (thy, l_obj) =>
         let val (_, disp_time) = disp_time (tap o K ooo out_intensify')
             fun aux (env, thy) x =
               fold_thy_shallow
@@ -1486,8 +1504,11 @@ fun thy_shallow get_all_meta_embed =
                     val () = out_intensify (Timing.message s |> Markup.markup Markup.operator) "" in
                   r
                 end
-              in disp_time (aux (env, thy)) (get_all_meta_embed (SOME thy)) end
-        in ((env, thy0), thy) end))
+              in disp_time (aux (env, thy)) (l_obj ()) end
+        in ((env, thy0), (thy, fn _ => get_all_meta_embed (SOME thy))) end)
+      l_shallow
+      (thy, case l_obj of SOME f => f | NONE => fn _ => get_all_meta_embed (SOME thy))
+      |> META.map_prod I fst)
 
 fun thy_switch (*pos1 pos2*) f mode tr =
   ( ( mode
@@ -1497,7 +1518,7 @@ fun thy_switch (*pos1 pos2*) f mode tr =
                                     ^ ": Commands will not be concurrently considered. "
                                     ^ Markup.markup
                                         (Markup.properties (Position.properties_of pos2) Markup.position)
-                                        "(Handled here\<here>)"))*) tr)
+                                        "(Handled here\092<^here>)"))*) tr)
   , f #~> Generation_mode.Data_gen.put)
 
 in
@@ -1505,7 +1526,7 @@ in
 fun outer_syntax_commands'' mk_string cmd_spec cmd_descr parser get_all_meta_embed =
  let open Generation_mode in
   Outer_Syntax'.command cmd_spec cmd_descr
-    (parser >> (fn name => fn thy =>
+    (parser >> (fn name => fn thy => fn _ =>
       (* WARNING: Whenever there would be errors raised by functions taking "thy" as input,
                   they will not be shown.
                   So the use of this "thy" can be considered as safe, as long as errors do not happen. *)
@@ -1524,20 +1545,13 @@ fun outer_syntax_commands'' mk_string cmd_spec cmd_descr parser get_all_meta_emb
       in (*let
            val l_obj = get_all_m NONE
              (* In principle, we could provide (SOME thy) here,
-                but this would only mostly work if we are evaluating a generated (not modified) file,
-                because it could be tempting to assume that generated files do not raise errors. *)
+                but in this case, any errors occurring during the application of the above function
+                will not be interactively shown.
+                Whenever we are evaluating commands coming from generated files, this restriction
+                can normally be removed (by writing (SOME thy)), as generally generated files are
+                conceived to not raise errors. *)
            val m_tr = m_tr
-             |-> mapM_deep (META.mapM (fn (env, i_deep) =>
-                pair (META.fold_thy_deep l_obj env, i_deep)
-                     o (if #skip_exportation i_deep then
-                          I
-                        else
-                          exec_deep { output_header_thy = #output_header_thy i_deep
-                                    , seri_args = #seri_args i_deep
-                                    , filename_thy = NONE
-                                    , tmp_export_code = #tmp_export_code i_deep
-                                    , skip_exportation = #skip_exportation i_deep }
-                                    ( META.d_output_header_thy_update (K NONE) env, l_obj))))
+                      |-> thy_deep exec_deep l_obj
          in ( m_tr
               |-> mapM_shallow (META.mapM (fn (env, thy_init) => fn acc =>
                     let val (tps, disp_time) = disp_time Toplevel'.keep_output
@@ -1573,10 +1587,14 @@ fun outer_syntax_commands'' mk_string cmd_spec cmd_descr parser get_all_meta_emb
                             (Toplevel'.keep_output tps Markup.operator "") end))
             , Data_gen.put)
             handle THY_REQUIRED pos =>
-              m_tr |-> thy_switch pos @{here} (thy_shallow get_all_m)
+              m_tr |-> thy_switch pos @{here} (thy_shallow NONE get_all_m)
          end
          handle THY_REQUIRED pos =>
-           *)m_tr |-> thy_switch (*pos @{here}*) (thy_deep get_all_m #~> thy_shallow get_all_m)
+           *)m_tr |-> thy_switch (*pos @{here}*) (fn mode => fn thy => 
+                                            let val l_obj = get_all_m (SOME thy) in
+                                              (thy_deep (tap oo exec_deep0) l_obj
+                                                 #~> thy_shallow (SOME (K l_obj)) get_all_m) mode thy
+                                            end)
       end
       |> uncurry Toplevel'.setup_theory))
  end
@@ -1595,8 +1613,8 @@ val () = let open Generation_mode in
     ((   mode >> (fn x => SOME [x])
       || parse_l' mode >> SOME
       || @{keyword "deep"} -- @{keyword "flush_all"} >> K NONE) >>
-    (fn SOME x => K (f_command x)
-      | NONE => fn thy => []
+    (fn SOME x => K (K (f_command x))
+      | NONE => fn thy => fn _ => []
           |> fold (fn (env, i_deep) => exec_deep i_deep (META.compiler_env_config_reset_all env))
                   (#deep (Data_gen.get thy))
           |> (fn [] => Toplevel'.keep (fn _ => warning "Nothing performed.") []
@@ -1615,8 +1633,7 @@ structure TOY_parse = struct
   val colon = Parse.$$$ ":"
   fun repeat2 scan = scan ::: Scan.repeat1 scan
 
-  fun xml_unescape s = (XML.content_of (YXML.parse_body s), Position.none)
-                       |> Symbol_Pos.explode |> Symbol_Pos.implode |> From.string
+  fun xml_unescape s = YXML.content_of s |> Symbol_Pos.explode0 |> Symbol_Pos.implode |> From.string
 
   fun outer_syntax_commands2 mk_string cmd_spec cmd_descr parser v_true v_false get_all_meta_embed =
     outer_syntax_commands' mk_string cmd_spec cmd_descr
@@ -1894,7 +1911,7 @@ structure TOY_parse = struct
 end
 \<close>
 
-subsection\<open>Setup of Meta Commands for Toy: Enum\<close>
+subsection\<open>Setup of Meta Commands for Toy: @{command Enum}\<close>
 
 ML\<open>
 val () =
@@ -1904,7 +1921,7 @@ val () =
       K (META.META_enum (META.ToyEnum (From.binding n1, From.list From.binding n2))))
 \<close>
 
-subsection\<open>Setup of Meta Commands for Toy: (abstract) Class\<close>
+subsection\<open>Setup of Meta Commands for Toy: (abstract) @{command Class}\<close>
 
 ML\<open>
 local
@@ -1933,7 +1950,7 @@ val () = mk_classDefinition TOY_class_abstract @{command_keyword Abstract_class}
 end
 \<close>
 
-subsection\<open>Setup of Meta Commands for Toy: Association, Composition, Aggregation\<close>
+subsection\<open>Setup of Meta Commands for Toy: @{command Association}, @{command Composition}, @{command Aggregation}\<close>
 
 ML\<open>
 local
@@ -1952,7 +1969,7 @@ val () = mk_associationDefinition META.ToyAssTy_aggregation @{command_keyword Ag
 end
 \<close>
 
-subsection\<open>Setup of Meta Commands for Toy: (abstract) Associationclass\<close>
+subsection\<open>Setup of Meta Commands for Toy: (abstract) @{command Associationclass}\<close>
 
 ML\<open>
 
@@ -1990,7 +2007,7 @@ val () = mk_associationClassDefinition TOY_associationclass_abstract @{command_k
 end
 \<close>
 
-subsection\<open>Setup of Meta Commands for Toy: Context\<close>
+subsection\<open>Setup of Meta Commands for Toy: @{command Context}\<close>
 
 ML\<open>
 local
@@ -2014,7 +2031,7 @@ val () =
 end
 \<close>
 
-subsection\<open>Setup of Meta Commands for Toy: End\<close>
+subsection\<open>Setup of Meta Commands for Toy: @{command End}\<close>
 
 ML\<open>
 val () =
@@ -2028,7 +2045,7 @@ val () =
            []))
 \<close>
 
-subsection\<open>Setup of Meta Commands for Toy: BaseType, Instance, State\<close>
+subsection\<open>Setup of Meta Commands for Toy: @{command BaseType}, @{command Instance}, @{command State}\<close>
 
 ML\<open>
 val () =
@@ -2056,7 +2073,7 @@ val () =
 end
 \<close>
 
-subsection\<open>Setup of Meta Commands for Toy: Transition\<close>
+subsection\<open>Setup of Meta Commands for Toy: @{command Transition}\<close>
 
 ML\<open>
 local
@@ -2077,7 +2094,7 @@ val () =
 end
 \<close>
 
-subsection\<open>Setup of Meta Commands for Toy: Tree\<close>
+subsection\<open>Setup of Meta Commands for Toy: @{command Tree}\<close>
 
 ML\<open>
 local

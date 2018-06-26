@@ -400,6 +400,7 @@ definition "mk_dot s1 s2 = S.flatten [\<open>.\<close>, s1, s2]"
 definition "mk_dot_par_gen dot l_s = S.flatten [dot, \<open>(\<close>, case l_s of [] \<Rightarrow> \<open>\<close> | x # xs \<Rightarrow> S.flatten [x, S.flatten (L.map (\<lambda>s. \<open>, \<close> @@ s) xs) ], \<open>)\<close>]"
 definition "mk_dot_par dot s = mk_dot_par_gen dot [s]"
 definition "mk_dot_comment s1 s2 s3 = mk_dot s1 (S.flatten [s2, \<open> /*\<close>, s3, \<open>*/\<close>])"
+definition "mk_quote s = S.flatten [\<open>'\<close>, s]"
 
 definition "hol_definition s = S.flatten [s, \<open>_def\<close>]"
 definition "hol_split s = S.flatten [s, \<open>.split\<close>]"

@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# Author: Florian Haftmann, TU Muenchen
+#
+# Configuration for automatic Haskabelle test.
+
+ISABELLE_DOC_SRC=/home/isatest/hg-isabelle/doc-src
+ISABELLE_HOME=/home/isatest/isadist/Isabelle
+ISABELLE_PROCESS="$ISABELLE_HOME/bin/isabelle-process"
+ISABELLE_TOOL="$ISABELLE_HOME/bin/isabelle"
+ISABELLE_GHC=/usr/local/ldist/bin/ghc
+SHORT=at-poly
+
+TEST_HOME=/home/isatest
+
+NOTIFY='kleing@cse.unsw.edu.au noschinl@in.tum.de'

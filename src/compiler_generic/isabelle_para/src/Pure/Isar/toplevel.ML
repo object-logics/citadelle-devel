@@ -20,6 +20,7 @@ sig
   val generic_theory_of: state -> generic_theory
   val theory_of: state -> theory
   val proof_of: state -> Proof.state
+  val proof_of': state -> Proof.state option
   val proof_position_of: state -> int
   val end_theory: Position.T -> state -> theory
   val presentation_context: state -> Proof.context
@@ -167,6 +168,7 @@ val context_of = node_case Context.proof_of Proof.context_of;
 val generic_theory_of = node_case I (Context.Proof o Proof.context_of);
 val theory_of = node_case Context.theory_of Proof.theory_of;
 val proof_of = node_case (fn _ => error "No proof state") I;
+fun proof_of' st = if is_proof st then SOME (proof_of st) else NONE;
 
 fun proof_position_of state =
   (case node_of state of

@@ -9,7 +9,7 @@ sig
   type blob = (string * (SHA1.digest * string list) option) Exn.result
   val read_file: Path.T -> Position.T -> Path.T -> Token.file
   val read_thy: Toplevel.state -> theory
-  val read: Keyword.keywords -> theory -> Path.T-> (unit -> theory) ->
+  val read: Keyword.keywords -> theory -> Proof.state option -> Path.T-> (unit -> theory) ->
     blob list * int -> Token.T list -> Toplevel.transitions
   type eval
   val eval_exec_id: eval -> Document_ID.exec
@@ -127,7 +127,7 @@ in
 fun read_thy st = Toplevel.theory_of st
   handle Toplevel.UNDEF => Pure_Syn.bootstrap_thy;
 
-fun read keywords thy master_dir init blobs_info span =
+fun read keywords thy st master_dir init blobs_info span =
   let
     val command_reports = Outer_Syntax.command_reports thy;
 
@@ -142,7 +142,7 @@ fun read keywords thy master_dir init blobs_info span =
   in
     if exists #1 token_reports then Toplevel.malformed pos "Malformed command syntax"
     else
-      (case Outer_Syntax.parse_tokens thy (resolve_files keywords master_dir blobs_info span) of
+      (case Outer_Syntax.parse_tokens thy st (resolve_files keywords master_dir blobs_info span) of
         [tr] => Toplevel.modify_init init tr
       | [] => Toplevel.ignored (#1 (Token.range_of span))
       | _ => Toplevel.malformed (#1 proper_range) "Exactly one command expected")
@@ -154,14 +154,15 @@ end;
 
 (* eval *)
 
-type 'a eval_state = {failed: bool, command: 'a, state: Toplevel.state};
+type ('transition, 'state) eval_state = {failed: bool, command: 'transition, state: 'state};
+type eval_states = (Toplevel.transitions, Toplevel.state list) eval_state;
 
 fun init_eval_state opt_thy =
  {failed = false,
   command = [],
-  state = (case opt_thy of NONE => Toplevel.toplevel | SOME thy => Toplevel.theory_toplevel thy)};
+  state = [case opt_thy of NONE => Toplevel.toplevel | SOME thy => Toplevel.theory_toplevel thy]};
 
-datatype eval = Eval of {exec_id: Document_ID.exec, eval_process: Toplevel.transitions eval_state lazy};
+datatype eval = Eval of {exec_id: Document_ID.exec, eval_process: eval_states lazy};
 
 fun eval_exec_id (Eval {exec_id, ...}) = exec_id;
 val eval_eq = op = o apply2 eval_exec_id;
@@ -172,7 +173,7 @@ fun eval_finished (Eval {eval_process, ...}) = Lazy.is_finished eval_process;
 fun eval_result (Eval {eval_process, ...}) =
   task_context (Future.worker_subgroup ()) Lazy.force eval_process;
 
-val eval_result_state = #state o eval_result;
+val eval_result_state = List.last o #state o eval_result;
 
 local
 
@@ -257,15 +258,15 @@ fun eval_state' keywords span tr state =
         in {failed = false, command = tr, state = st'} end)
   end;
 
-fun eval_state keywords span l_tr ({state, ...}: Toplevel.transitions eval_state) =
-  let val (command, (failed, state)) =
+fun eval_state keywords span l_tr ({state, ...}: eval_states) =
+  let val (tr_st, (failed, _)) =
         fold_map (fn tr => fn (failed, state) =>
                     let val result = eval_state' keywords span tr state in
-                      (#command result, (failed orelse #failed result, #state result))
+                      ((#command result, #state result), (failed orelse #failed result, #state result))
                     end)
                  l_tr
-                 (false, state)
-  in {failed = failed, command = command, state = state} end;
+                 (false, List.last state)
+  in {failed = failed, command = map #1 tr_st, state = map #2 tr_st} end;
 
 in
 
@@ -275,11 +276,13 @@ fun eval keywords master_dir init blobs_info span eval0 =
     fun process () =
       let
         val eval_state0 = eval_result eval0;
-        val thy = read_thy (#state eval_state0);
+        val state0 = List.last (#state eval_state0);
+        val thy = read_thy state0;
+        val st = Toplevel.proof_of' state0;
         val tr =
           Position.setmp_thread_data (Position.id_only (Document_ID.print exec_id))
             (fn () =>
-              read keywords thy master_dir init blobs_info span |> Toplevel.exec_id exec_id) ();
+              read keywords thy st master_dir init blobs_info span |> Toplevel.exec_id exec_id) ();
       in eval_state keywords span tr eval_state0 end;
   in Eval {exec_id = exec_id, eval_process = Lazy.lazy_name "Command.eval" process} end;
 
@@ -331,10 +334,12 @@ fun print command_visible command_overlays keywords command_name eval old_prints
           let
             val {failed, command, state = st', ...} = eval_result eval;
             val tr = Toplevel.exec_id exec_id command;
-            val opt_context = try Toplevel.generic_theory_of st';
           in
             if failed andalso strict then ()
-            else List.app (fn tr => print_error tr opt_context (fn () => print_fn tr st')) tr
+            else List.app (fn (tr, st') => print_error tr
+                                                       (try Toplevel.generic_theory_of st')
+                                                       (fn () => print_fn tr st'))
+                          (ListPair.zip (tr, st'))
           end;
       in
         Print {

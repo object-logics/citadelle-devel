@@ -201,7 +201,7 @@ qed
 lemma [simp,code_unfold] : "(Sequence{}->including\<^sub>S\<^sub>e\<^sub>q(a)) = (Sequence{}->prepend\<^sub>S\<^sub>e\<^sub>q(a))"
   apply(simp add: OclIncluding_def OclPrepend_def mtSequence_def)
   apply(subst (1 2) Abs_Sequence\<^sub>b\<^sub>a\<^sub>s\<^sub>e_inverse, simp)
-by(metis drop.simps append_Nil)
+by auto
 
 lemma [simp,code_unfold] : "((S->prepend\<^sub>S\<^sub>e\<^sub>q(a))->including\<^sub>S\<^sub>e\<^sub>q(b)) = ((S->including\<^sub>S\<^sub>e\<^sub>q(b))->prepend\<^sub>S\<^sub>e\<^sub>q(a))"
  proof -
