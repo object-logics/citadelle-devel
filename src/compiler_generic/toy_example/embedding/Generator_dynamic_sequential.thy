@@ -1347,15 +1347,15 @@ fun thy_shallow l_obj get_all_meta_embed =
       (thy, case l_obj of SOME f => f | NONE => fn _ => get_all_meta_embed (SOME thy))
       |> META.map_prod I fst)
 
-fun thy_switch (*pos1 pos2*) f mode tr =
+fun thy_switch \<^cancel>\<open>pos1 pos2\<close> f mode tr =
   ( ( mode
-    , (*Toplevel'.keep
+    , \<^cancel>\<open>Toplevel'.keep
         (fn _ => Output.information ( "Theory required while transitions were being built"
                                     ^ Position.here pos1
                                     ^ ": Commands will not be concurrently considered. "
                                     ^ Markup.markup
                                         (Markup.properties (Position.properties_of pos2) Markup.position)
-                                        "(Handled here\092<^here>)"))*) tr)
+                                        "(Handled here\092<^here>)"))\<close> tr)
   , f #~> Generation_mode.Data_gen.put)
 
 in
@@ -1379,7 +1379,7 @@ fun outer_syntax_commands''' is_safe mk_string cmd_spec cmd_descr parser get_all
                                            (case n of NONE => thy
                                                     | SOME n => Config.put_global ML_Print_Depth.print_depth n thy))
                                          name)))))
-      in (*let
+      in \<^cancel>\<open>let
            val l_obj = get_all_m (is_safe thy)
                        (* In principle, it is fine if (SOME thy) is provided to
                           get_all_m. However, because certain types of errors are most of the
@@ -1442,11 +1442,11 @@ fun outer_syntax_commands''' is_safe mk_string cmd_spec cmd_descr parser get_all
               m_tr |-> thy_switch pos \<^here> (thy_shallow NONE get_all_m)
          end
          handle THY_REQUIRED pos =>
-           *)m_tr |-> thy_switch (*pos \<^here>*) (fn mode => fn thy => 
-                                        let val l_obj = get_all_m (SOME thy) in
-                                          (thy_deep (tap oo exec_deep0) l_obj
-                                             #~> thy_shallow (SOME (K l_obj)) get_all_m) mode thy
-                                        end)
+           \<close>m_tr |-> thy_switch \<^cancel>\<open>pos \<^here>\<close> (fn mode => fn thy => 
+                                            let val l_obj = get_all_m (SOME thy) in
+                                              (thy_deep (tap oo exec_deep0) l_obj
+                                                 #~> thy_shallow (SOME (K l_obj)) get_all_m) mode thy
+                                            end)
       end
       |> uncurry Toplevel'.setup_theory))
  end
