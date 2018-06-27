@@ -558,7 +558,6 @@ fun interpretation1 n loc_n loc_param =
                                                                            loc_param)
                                             , [])))]
                                     , [])
-                                    []
 end
 
 structure Command_Transition = struct

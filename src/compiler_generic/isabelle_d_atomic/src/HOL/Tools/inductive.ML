@@ -257,21 +257,26 @@ fun print_inductives verbose ctxt =
 fun the_inductive ctxt term =
   Item_Net.retrieve (#infos (rep_data ctxt)) term
   |> the_single
+  |> apsnd (transform_result (Morphism.transfer_morphism' ctxt))
 
 fun the_inductive_global ctxt name =
   #infos (rep_data ctxt)
   |> Item_Net.content
   |> filter (fn ({names, ...}, _) => member op = names name)
   |> the_single
+  |> apsnd (transform_result (Morphism.transfer_morphism' ctxt))
 
 fun put_inductives info =
   map_data (fn (infos, monos, equations) =>
-    (Item_Net.update info infos, monos, equations));
+    (Item_Net.update (apsnd (transform_result Morphism.trim_context_morphism) info) infos,
+      monos, equations));
 
 
 (* monotonicity rules *)
 
-val get_monos = #monos o rep_data;
+fun get_monos ctxt =
+  #monos (rep_data ctxt)
+  |> map (Thm.transfer' ctxt);
 
 fun mk_mono ctxt thm =
   let
@@ -280,7 +285,7 @@ fun mk_mono ctxt thm =
       handle THM _ => thm RS @{thm le_boolD}
   in
     (case Thm.concl_of thm of
-      Const (\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ _ => eq_to_mono (thm RS meta_eq_to_obj_eq)
+      Const (\<^const_name>\<open>Pure.eq\<close>, _) $ _ $ _ => eq_to_mono (HOLogic.mk_obj_eq thm)
     | _ $ (Const (\<^const_name>\<open>HOL.eq\<close>, _) $ _ $ _) => eq_to_mono thm
     | _ $ (Const (\<^const_name>\<open>Orderings.less_eq\<close>, _) $ _ $ _) =>
       dest_less_concl (Seq.hd (REPEAT (FIRSTGOAL
@@ -291,7 +296,8 @@ fun mk_mono ctxt thm =
 val mono_add =
   Thm.declaration_attribute (fn thm => fn context =>
     map_data (fn (infos, monos, equations) =>
-      (infos, Thm.add_thm (mk_mono (Context.proof_of context) thm) monos, equations)) context);
+      (infos, Thm.add_thm (Thm.trim_context (mk_mono (Context.proof_of context) thm)) monos,
+        equations)) context);
 
 val mono_del =
   Thm.declaration_attribute (fn thm => fn context =>
@@ -306,12 +312,14 @@ val _ =
 
 (* equations *)
 
-val get_equations = #equations o rep_data;
+fun retrieve_equations ctxt =
+  Item_Net.retrieve (#equations (rep_data ctxt))
+  #> map (Thm.transfer' ctxt);
 
 val equation_add_permissive =
   Thm.declaration_attribute (fn thm =>
     map_data (fn (infos, monos, equations) =>
-      (infos, monos, perhaps (try (Item_Net.update thm)) equations)));
+      (infos, monos, perhaps (try (Item_Net.update (Thm.trim_context thm))) equations)));
 
 
 
@@ -645,7 +653,7 @@ fun mk_simp_eq ctxt prop =
     val ctxt' = Variable.auto_fixes prop ctxt;
     val lhs_of = fst o HOLogic.dest_eq o HOLogic.dest_Trueprop o Thm.prop_of;
     val substs =
-      Item_Net.retrieve (get_equations ctxt) (HOLogic.dest_Trueprop prop)
+      retrieve_equations ctxt (HOLogic.dest_Trueprop prop)
       |> map_filter
         (fn eq => SOME (Pattern.match thy (lhs_of eq, HOLogic.dest_Trueprop prop)
             (Vartab.empty, Vartab.empty), eq)
@@ -1187,7 +1195,6 @@ fun gen_add_inductive_i mk_def
     val ps = map Free pnames;
 
     val (_, ctxt2) = lthy |> Variable.add_fixes (map (Binding.name_of o fst o fst) cnames_syn');
-    val _ = map (fn abbr => Local_Defs.fixed_abbrev abbr ctxt2) abbrevs;
     val ctxt3 = ctxt2 |> fold (snd oo Local_Defs.fixed_abbrev) abbrevs;
     val expand = Assumption.export_term ctxt3 lthy #> Proof_Context.cert_term lthy;
 
