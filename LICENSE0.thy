@@ -102,7 +102,7 @@ structure Holder0 : OBJECT = struct
   val key = "holder"
   fun pretty (l, country) = 
     let val sep = ", " in
-      String.concatWith sep (map (fn s => s |> Input.source_explode |> Symbol_Pos.trim_blanks |> Symbol_Pos.content) l)
+      String.concatWith sep (map (fn s => s |> Input.source_explode |> trim (Symbol.is_blank o Symbol_Pos.symbol) |> Symbol_Pos.content) l)
       ^ (case country of NONE => "" | SOME country => sep ^ Country0.pretty country)
     end
 end
@@ -230,7 +230,7 @@ val _ =
     (Parse.binding --| Parse.where_ -- Parse.document_source >>
       (fn (n, src) =>
         [ define @{command_keyword country} Country.map (n, src)
-        , (@{command_keyword country}, Thy_Output.document_command {markdown = true} (NONE, src))]));
+        , (@{command_keyword country}, Pure_Syn.document_command {markdown = true} (NONE, src))]));
 
 val _ =
   Outer_Syntax.commands @{command_keyword holder} "formal comment (primary style)"
@@ -243,7 +243,7 @@ val _ =
           country
           I
         :: map (fn src =>
-                 (@{command_keyword holder}, Thy_Output.document_command {markdown = true} (NONE, src)))
+                 (@{command_keyword holder}, Pure_Syn.document_command {markdown = true} (NONE, src)))
                l_src));
 
 val _ =
@@ -264,7 +264,7 @@ val _ =
                                     -- Parse.document_source >>
       (fn ((n, _), src) =>
         [ define @{command_keyword license} License.map (n, src)
-        , (@{command_keyword license}, Thy_Output.document_command {markdown = true} (NONE, src))]));
+        , (@{command_keyword license}, Pure_Syn.document_command {markdown = true} (NONE, src))]));
 
 val _ =
   Outer_Syntax.commands' @{command_keyword check_license} "formal comment (primary style)"
