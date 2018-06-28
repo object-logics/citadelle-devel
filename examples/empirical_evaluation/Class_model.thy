@@ -51,7 +51,7 @@ definition "print_class =
 
 definition \<open>print_abr sprintf_int write_file =
   (let sprintf_int = sprintf_int o natural_of_nat
-     ; S_flatten_n = S.flatten o L.map (\<lambda>s. S.flatten [s, \<lless>[CHR 0x0A]\<ggreater>]) in
+     ; S_flatten_n = S.flatten o L.map (\<lambda>s. S.flatten [s, \<lless>[0x0A]\<ggreater>]) in
   L.flatten o L.flatten o L.map (\<lambda> (nb_child, deep).
     let body = L.map print_class (fst (mk_tree nb_child deep 0))
       ; tree_name = S.flatten [\<open>Tree_\<close>, sprintf_int nb_child, \<open>_\<close>, sprintf_int deep] in

@@ -409,7 +409,7 @@ parse_translation {*
      end)]
 *}
 
-term "\<open>abc\<close>"
+
 declare [[cartouche_type="Integer"]]
 term "\<open>-123\<close>"
 declare [[cartouche_type="Real"]]

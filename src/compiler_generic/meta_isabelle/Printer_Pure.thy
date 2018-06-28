@@ -50,9 +50,9 @@ context Print
 begin
 
 fun of_pure_typ where "of_pure_typ e = (\<lambda>
-    Type s l \<Rightarrow> if s \<triangleq> \<langle>''fun''\<rangle> then
+    Type s l \<Rightarrow> if s \<triangleq> \<langle>STR ''fun''\<rangle> then
                   \<open>(%s)\<close> (String_concat \<open> \<Rightarrow> \<close> (List.map of_pure_typ l))
-                else if s \<triangleq> \<langle>''Product_Type.prod''\<rangle> then
+                else if s \<triangleq> \<langle>STR ''Product_Type.prod''\<rangle> then
                   \<open>(%s)\<close> (String_concat \<open> \<times> \<close> (List.map of_pure_typ l))
                 else
                   \<open>%s%s\<close> (case l of [] \<Rightarrow> \<open>\<close>

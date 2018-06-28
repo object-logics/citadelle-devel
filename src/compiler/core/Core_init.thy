@@ -354,9 +354,9 @@ definition "start_map'''' f fl = (\<lambda> env. start_map f (fl (D_ocl_semantic
 definition "start_map''''' f fl = (\<lambda> env. start_map f (fl (D_output_sorry_dirty env) (D_ocl_semantics env)) env)"
 definition "start_map'''''' f fl = (\<lambda> env. start_map f (fl (\<lambda>s. (case D_output_header_thy env of
                                                                    Some (n_thy, _, _) \<Rightarrow>
-                                                                     String.replace_chars
-                                                                       (\<lambda> x. if x = CHR 0x5F then \<open>-\<close>
-                                                                             else \<degree>x\<degree>)
+                                                                     String.replace_integers
+                                                                       (\<lambda> n. if n = 0x5F then \<open>-\<close>
+                                                                             else \<degree>n\<degree>)
                                                                        n_thy
                                                                  | None \<Rightarrow> \<open>\<close>) @@ s)
                                                          (D_ocl_semantics env)) env)"
