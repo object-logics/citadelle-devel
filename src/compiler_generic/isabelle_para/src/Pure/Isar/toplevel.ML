@@ -188,15 +188,18 @@ structure Presentation_State = Proof_Data
   fun init _ = NONE;
 );
 
-fun presentation_context state =
+fun presentation_context0 state =
   (case try node_of state of
     SOME (Theory (_, SOME ctxt)) => ctxt
   | SOME node => cases_node Context.proof_of Proof.context_of node
   | NONE =>
       (case try Theory.get_pure () of
         SOME thy => Proof_Context.init_global thy
-      | NONE => raise UNDEF))
-  |> Presentation_State.put (SOME state);
+      | NONE => raise UNDEF));
+
+fun presentation_context (state as State (current, _, backup)) =
+  presentation_context0 state
+  |> Presentation_State.put (SOME (State (current, NONE, backup)));
 
 fun presentation_state ctxt =
   (case Presentation_State.get ctxt of
@@ -251,7 +254,7 @@ fun apply_transaction gthy f g node =
   let
     val cont_node = reset_presentation node;
     val context = cases_node I (Context.Proof o Proof.context_of) cont_node;
-    fun state_error e nd = (State (SOME nd, SOME node, gthy), e);
+    fun state_error e nd = (State (SOME nd, SOME cont_node, gthy), e);
 
     val (result, err) =
       cont_node
@@ -289,8 +292,8 @@ fun apply_tr _ (Init f) (State (NONE, _, gthy)) =
       exit_transaction gthy state
   | apply_tr int (Keep f) state =
       Runtime.controlled_execution (try generic_theory_of state) (fn x => tap (f int) x) state
-  | apply_tr int (Transaction (f, g)) (State (SOME state, _, gthy)) =
-      apply_transaction gthy (fn x => f int x) g state
+  | apply_tr int (Transaction (f, g)) (State (SOME node, _, gthy)) =
+      apply_transaction gthy (fn x => f int x) g node
   | apply_tr _ _ _ = raise UNDEF;
 
 fun apply_union _ [] state = raise FAILURE (state, UNDEF)
@@ -604,15 +607,9 @@ fun put_timing timing = map_transition (fn (name, pos, _, trans, read_write) => 
 local
 
 fun app int (tr as Transition {trans, ...}) =
-  setmp_thread_position tr (fn state =>
-    let
-      val timing_start = Timing.start ();
-      val (result, opt_err) = apply_trans int trans state;
-      val timing_result = Timing.result timing_start;
-      val timing_props =
-        Markup.command_timing :: (Markup.nameN, name_of tr) :: Position.properties_of (pos_of tr);
-      val _ = Timing.protocol_message timing_props timing_result;
-    in (result, Option.map (fn UNDEF => ERROR (type_error tr) | exn => exn) opt_err) end);
+  setmp_thread_position tr
+    (Timing.protocol (name_of tr) (pos_of tr) (apply_trans int trans)
+      ##> Option.map (fn UNDEF => ERROR (type_error tr) | exn => exn));
 
 fun state_load (Transition {read_write = (read, _), ...}) (st as State (_, _, (nd1, nd0))) =
   case read of Load_backup => State' (nd1, nd0)
@@ -628,7 +625,7 @@ fun transition int tr st =
   let
     val st = state_load tr st
     val (st', opt_err) =
-      Context.setmp_generic_context (try (Context.Proof o presentation_context) st)
+      Context.setmp_generic_context (try (Context.Proof o presentation_context0) st)
         (fn () => app int tr st) ();
     val opt_err' = opt_err |> Option.map
       (fn Runtime.EXCURSION_FAIL exn_info => exn_info
@@ -752,7 +749,7 @@ fun element_result keywords (Thy_Syntax.Element (tr, NONE)) st = atom_result key
                       val (result, result_state) =
                         State (SOME (Proof (prf', (finish, orig_gthy))), prev, backup)
                         |> fold_map (element_result keywords) body_elems ||> command end_tr;
-                    in (Result_List result, presentation_context result_state) end))
+                    in (Result_List result, presentation_context0 result_state) end))
               #> (fn (res, state') => state' |> put_result (Result_Future res));
 
             val forked_proof =
@@ -765,7 +762,7 @@ fun element_result keywords (Thy_Syntax.Element (tr, NONE)) st = atom_result key
               |> command (head_tr |> reset_trans |> forked_proof);
             val end_result = Result (end_tr, st'');
             val result =
-              Result_List [head_result, Result.get (presentation_context st''), end_result];
+              Result_List [head_result, Result.get (presentation_context0 st''), end_result];
           in (result, st'') end
       end;
 
