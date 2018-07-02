@@ -125,7 +125,7 @@ code_reflect' open META
 subsection\<open>Interface Between the Reflected and the Native\<close>
 
 ML\<open>
-val To_string0 = String.implode o META.to_list
+val To_string0 = META.meta_of_logic
 val To_nat = Code_Numeral.integer_of_natural
 
 exception THY_REQUIRED of Position.T
@@ -1215,7 +1215,7 @@ let open Generation_mode
           | _ => String.concat (map ( (fn s => s ^ "\n")
                                     o Active.sendback_markup_command
                                     o trim_line)
-                                    (String.tokens (fn c => c = META.char_escape) s)))
+                                    (String.tokens (fn c => Char.ord c = META.integer_escape) s)))
        in List.app (fn (out, err) => ( writeln (Markup.markup Markup.keyword2 err)
                                      ; case trim_line out of "" => ()
                                        | out => writeln (Markup.markup Markup.keyword1 out)))

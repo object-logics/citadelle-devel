@@ -83,7 +83,7 @@ definition "print_ctxt_is_name_at_post = (case String.to_list var_at_when_hol_po
                                         | _ \<Rightarrow> None)"
 
 definition "print_ctxt_to_ocl_gen_split s =
- (case L.split_at (\<lambda> s. s = CHR 0x2E) (String.to_list s) of
+ (case L.split_at (\<lambda> s. s = 0x2E) (String.to_list s) of
     (_, Some _, s) \<Rightarrow> Some s
   | _ \<Rightarrow> None)"
 definition "print_ctxt_to_ocl_gen l_access f var =

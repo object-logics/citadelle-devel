@@ -48,6 +48,8 @@ imports Printer
 begin
 ML_file "~~/src/Doc/antiquote_setup.ML"
 
+declare[[cartouche_type' = "abr_string"]]
+
 text \<open>In the ``static'' solution: the user manually generates
 the Isabelle file after writing by hand an OCL input to translate.
 The input is not written with the syntax of OCL,
@@ -58,9 +60,9 @@ subsection\<open>Giving an Input to Translate\<close>
 definition "Design =
  (let n = \<lambda>n1 n2. OclTyObj (OclTyCore_pre n1) (case n2 of None \<Rightarrow> [] | Some n2 \<Rightarrow> [[OclTyCore_pre n2]])
     ; mk = \<lambda>n l. ocl_class_raw.make n l [] False in
-  [ mk (n \<langle>''Galaxy''\<rangle> None) [(\<langle>''sound''\<rangle>, OclTy_raw \<langle>''unit''\<rangle>), (\<langle>''moving''\<rangle>, OclTy_raw \<langle>''bool''\<rangle>)]
-  , mk (n \<langle>''Planet''\<rangle> (Some \<langle>''Galaxy''\<rangle>)) [(\<langle>''weight''\<rangle>, OclTy_raw \<langle>''nat''\<rangle>)]
-  , mk (n \<langle>''Person''\<rangle> (Some \<langle>''Planet''\<rangle>)) [(\<langle>''salary''\<rangle>, OclTy_raw \<langle>''int''\<rangle>)] ])"
+  [ mk (n \<open>Galaxy\<close> None) [(\<open>sound\<close>, OclTy_raw \<open>unit\<close>), (\<open>moving\<close>, OclTy_raw \<open>bool\<close>)]
+  , mk (n \<open>Planet\<close> (Some \<open>Galaxy\<close>)) [(\<open>weight\<close>, OclTy_raw \<open>nat\<close>)]
+  , mk (n \<open>Person\<close> (Some \<open>Planet\<close>)) [(\<open>salary\<close>, OclTy_raw \<open>int\<close>)] ])"
 
 text \<open>Since we are in a Isabelle session, at this time, it becomes possible to inspect with
 the command @{command value} the result of the translations applied with @{term Design}.
@@ -75,14 +77,14 @@ definition "main =
    (compiler_env_config.extend
      (compiler_env_config_empty True None (oidInit (Oid 0)) Gen_only_design (None, False)
         \<lparr> D_output_disable_thy := False
-        , D_output_header_thy := Some (\<langle>''Employee_DesignModel_UMLPart_generated''\<rangle>
-                                      ,[\<langle>''../src/OCL_main''\<rangle>]
-                                      ,\<langle>''../src/compiler/Generator_dynamic_sequential''\<rangle>) \<rparr>)
+        , D_output_header_thy := Some (\<open>Employee_DesignModel_UMLPart_generated\<close>
+                                      ,[\<open>../src/OCL_main\<close>]
+                                      ,\<open>../src/compiler/Generator_dynamic_sequential\<close>) \<rparr>)
      ( L.map (META_class_raw Floor1) Design
        @@@@ [ META_association (ocl_association.make
                                   OclAssTy_association
-                                  (OclAssRel [ (n \<langle>''Person''\<rangle>, OclMult (Mult_star, None) None)
-                                             , (n \<langle>''Person''\<rangle>, OclMult (Mult_nat 0, Some (Mult_nat 1)) (Some \<langle>''boss''\<rangle>))]))
+                                  (OclAssRel [ (n \<open>Person\<close>, OclMult (Mult_star, None) None)
+                                             , (n \<open>Person\<close>, OclMult (Mult_nat 0, Some (Mult_nat 1)) (Some \<open>boss\<close>))]))
           , META_flush_all OclFlushAll]
      , None)))"
 
