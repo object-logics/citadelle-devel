@@ -45,7 +45,6 @@ session Meta_Isabelle (AFP) = HOL +
   description {* Meta_Isabelle *}
   options [timeout = 600, document = pdf, document_output = document_generated]
   theories [document = false]
-    "~~/src/HOL/Library/Code_Char"
     "isabelle_home/src/HOL/Isabelle_Main0"
     "isabelle_home/src/HOL/Isabelle_Main1"
   theories
