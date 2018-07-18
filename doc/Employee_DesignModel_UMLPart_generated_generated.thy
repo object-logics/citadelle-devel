@@ -1,4 +1,4 @@
-theory Employee_DesignModel_UMLPart_generated_generated imports "../src/UML_Main"   "../src/compiler/Static"   "../src/compiler/Generator_dynamic_sequential" begin
+theory Employee_DesignModel_UMLPart_generated_generated imports "OCL.UML_Main"   "FOCL.Static"   "FOCL.Generator_dynamic_sequential" begin
 
 (* 1 ************************************ 0 + 0 *)  (* term Floor1_infra.print_infra_enum_synonym *)
 
