@@ -119,7 +119,7 @@ definition "of_toy_def_transition _ (floor :: (* polymorphism weakening needed b
 end
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   Print.To_oid_def
   Print.of_toy_def_base_def
   Print.of_toy_instance_single_def
@@ -129,7 +129,7 @@ lemmas [code] =
   Print.of_toy_def_pp_core_def
   Print.of_toy_def_transition_def
 
-  (* fun *)
+  \<comment> \<open>fun\<close>
   Print.of_toy_list_attr.simps
   Print.of_toy_data_shallow.simps
 

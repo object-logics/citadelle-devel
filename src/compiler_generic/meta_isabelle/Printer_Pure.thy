@@ -78,10 +78,10 @@ fun of_pure_term where "of_pure_term show_t l e = (\<lambda>
 end
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   Print.pure_typ0_def
 
-  (* fun *)
+  \<comment> \<open>fun\<close>
   Print.of_pure_typ.simps
   Print.of_pure_term.simps
 

@@ -155,7 +155,7 @@ definition "of_all_meta_lists env l_thy =
 end
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   Print.of\<^sub>e\<^sub>n\<^sub>v_section_def
   Print.of\<^sub>e\<^sub>n\<^sub>v_semi__theory_def
   Print.of\<^sub>e\<^sub>n\<^sub>v_semi__theories_def
@@ -166,6 +166,6 @@ lemmas [code] =
   Print.of_all_meta_def
   Print.of_all_meta_lists_def
 
-  (* fun *)
+  \<comment> \<open>fun\<close>
 
 end

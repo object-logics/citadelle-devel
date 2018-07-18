@@ -105,11 +105,11 @@ definition \<open>of_toy_ctxt _ (floor :: (* polymorphism weakening needed by co
 end
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   Print.concatWith_def
   Print.of_ctxt2_term_def
   Print.of_toy_ctxt_def
-  (* fun *)
+  \<comment> \<open>fun\<close>
   Print.of_ctxt2_term_aux.simps
 
 end

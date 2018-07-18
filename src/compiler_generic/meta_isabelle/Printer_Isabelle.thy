@@ -423,7 +423,7 @@ assumes %s: "%s"\<close> (To_string name) (of_semi__term e)))
 end
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   Print.of_semi__typ'_def
   Print.of_datatype_def
   Print.of_type_synonym_def
@@ -462,7 +462,7 @@ lemmas [code] =
   Print.String_concat_map_def
   Print.of_semi__theories_def
 
-  (* fun *)
+  \<comment> \<open>fun\<close>
   Print.of_semi__typ.simps
   Print.of_semi__term.simps
   Print.of_semi__thm_attribute_aux.simps

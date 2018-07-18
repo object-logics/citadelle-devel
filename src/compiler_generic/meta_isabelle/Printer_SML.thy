@@ -77,9 +77,9 @@ fun of_semi__term'0 and
 end
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   Print.of_semi__val_fun_def
-  (* fun *)
+  \<comment> \<open>fun\<close>
   Print.of_semi__term'0.simps
   Print.of_semi__term'1.simps
   Print.of_semi__term'.simps

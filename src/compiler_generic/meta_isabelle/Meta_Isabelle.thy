@@ -241,7 +241,7 @@ definition "simplified_l s l = List.fold (\<lambda>x acc. Thm_simplified acc x) 
 end
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   T.thm_def
   T.thms_def
   T.THEN_def
@@ -370,7 +370,7 @@ definition "auto = auto_simp_add []"
 end
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   M.Method_simp_add_del_def
   M.Method_subst_l_def
   M.rule'_def
@@ -438,7 +438,7 @@ definition "have0 = Command_have"
 end
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   C.done_def
   C.by_def
   C.sorry_def

@@ -85,11 +85,11 @@ definition "write_file0 = Print.write_file0 String.meta_of_logic (ToNat integer_
 definition "write_file = Print.write_file String.meta_of_logic (ToNat integer_of_natural)"
 
 lemmas [code] =
-  (* def *)
+  \<comment> \<open>def\<close>
   Print.write_file0_def
   Print.write_file_def
 
-  (* fun *)
+  \<comment> \<open>fun\<close>
 
 section\<open>Miscellaneous: Garbage Collection of Notations\<close>
 
