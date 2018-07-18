@@ -406,7 +406,7 @@ definition "oid s = (\<lambda>Oid n \<Rightarrow> basic [s @@ String.natural_to_
 end
 
 lemmas [code] =
-  (*def*)
+  \<comment> \<open>def\<close>
   SML.oid_def
 
 definition "Term_oid s = (\<lambda>Oid n \<Rightarrow> Term_basic [s @@ String.natural_to_digit10 n])"

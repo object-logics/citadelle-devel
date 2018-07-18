@@ -236,7 +236,7 @@ definition fold where "fold f = RBT.fold (\<lambda>c. f \<lless>c\<ggreater>)"
 definition "entries m = L.map (map_prod (\<lambda>c. \<lless>c\<ggreater>) id) (RBT.entries m)"
 end
 lemmas [code] =
-  (*def*)
+  \<comment> \<open>def\<close>
   RBTS.lookup_def
   RBTS.insert_def
   RBTS.map_entry_def

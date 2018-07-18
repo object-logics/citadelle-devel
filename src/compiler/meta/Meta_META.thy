@@ -232,7 +232,7 @@ definition "interpretation = i Theory_interpretation"
 end
 
 lemmas [code] =
-  (*def*)
+  \<comment> \<open>def\<close>
   O.i_def
   O.datatype_def
   O.type_synonym_def
@@ -273,7 +273,7 @@ definition "interpretation = Theory_interpretation"
 end
 
 lemmas [code] =
-  (*def*)
+  \<comment> \<open>def\<close>
   O'.datatype_def
   O'.type_synonym_def
   O'.type_notation_def

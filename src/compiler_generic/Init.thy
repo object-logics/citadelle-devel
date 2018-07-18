@@ -191,7 +191,7 @@ end
 notation L.append (infixr "@@@@" 65)
 
 lemmas [code] =
-  (*def*)
+  \<comment> \<open>def\<close>
   L.map_def
   L.flatten_def
   L.mapi_def
@@ -214,7 +214,7 @@ lemmas [code] =
   L.map_find_def
   L.bind_def
 
-  (*fun*)
+  \<comment> \<open>fun\<close>
   L.map_find_aux.simps
 
 subsection\<open>Operations on Char\<close>
@@ -275,7 +275,7 @@ definition (in String) "member l x = List.member (L.map String\<^sub>b\<^sub>a\<
 definition (in String\<^sub>b\<^sub>a\<^sub>s\<^sub>e) "flatten l = String.to_String\<^sub>b\<^sub>a\<^sub>s\<^sub>e (S.flatten (L.map to_String l))"
 
 lemmas [code] =
-  (*def*)
+  \<comment> \<open>def\<close>
   S.flatten_def
   String.flatten_def
   String.make_def
@@ -298,7 +298,7 @@ lemmas [code] =
   String.member_def
   String\<^sub>b\<^sub>a\<^sub>s\<^sub>e.flatten_def
 
-  (*fun*)
+  \<comment> \<open>fun\<close>
   String.map_gen.simps
   String.foldl.simps
   String.is_empty.simps
@@ -343,7 +343,7 @@ definition "integer_to_digit16 =
   \<lambda>n \<Rightarrow> \<lless>[f (n div 16), f (n mod 16)]\<ggreater>)"
 end
 lemmas [code] =
-  (*def*)
+  \<comment> \<open>def\<close>
   String.lowercase_def
   String.uppercase_def
   String.to_bold_number_def
@@ -352,7 +352,7 @@ lemmas [code] =
   String.nat_to_digit26_def
   String.integer_to_digit16_def
 
-  (*fun*)
+  \<comment> \<open>fun\<close>
   String.nat_to_digit10_aux.simps
   String.nat_to_digit26_aux.simps
 
@@ -380,7 +380,7 @@ definition "isub =
 definition "isup s = \<open>__\<close> @@ s"
 end
 lemmas [code] =
-  (*def*)
+  \<comment> \<open>def\<close>
   String.base255_def
   String.isub_def
   String.isup_def

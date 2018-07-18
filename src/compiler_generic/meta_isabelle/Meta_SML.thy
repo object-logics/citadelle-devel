@@ -101,7 +101,7 @@ definition "app_pair e l = apply e (case l of [] \<Rightarrow> [] | _ \<Rightarr
 end
 
 lemmas [code] =
-  (*def*)
+  \<comment> \<open>def\<close>
   SML.string_def
   SML.rewrite_def
   SML.basic_def
