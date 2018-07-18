@@ -44,7 +44,7 @@ text\<open>We present two solutions for obtaining an Isabelle file.\<close>
 section\<open>Static Meta Embedding with Exportation\<close>
 
 theory  Generator_static
-imports Printer
+imports FOCL.Printer
 begin
 ML_file "~~/src/Doc/antiquote_setup.ML"
 

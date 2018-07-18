@@ -2075,7 +2075,7 @@ in
                                      :: acc)
                                 end)
                              l_rep
-                             (Symbol.explode content, (Position.advance_offset 1 pos, 0), [])
+                             (Symbol.explode content, (Position.advance_offsets 1 pos, 0), [])
                         |> #3
                       in Position.reports l_rep end)
                     l_rep

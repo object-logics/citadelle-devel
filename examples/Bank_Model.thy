@@ -44,7 +44,7 @@ chapter{* Part ... *}
 theory
   Bank_Model
 imports
-  "../src/UML_OCL"
+  FOCL.UML_OCL
 begin
 
 Class Bank

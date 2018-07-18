@@ -42,7 +42,7 @@
 chapter{* Part ... *}
 
 theory  Class_model
-imports "../../src/compiler/core/Core_init"
+imports FOCL.Core_init
 begin
 
 definition "print_class =

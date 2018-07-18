@@ -48,7 +48,7 @@ sig
   val keep': (bool -> state -> unit) -> transition -> transition
   val keep_proof: (state -> unit) -> transition -> transition
   val ignored: Position.T -> transitions
-  val is_ignored: transition -> bool
+  val is_ignored: transitions -> bool
   val malformed: Position.T -> string -> transitions
   val generic_theory: (generic_theory -> generic_theory) -> transition -> transition
   val theory': (bool -> theory -> theory) -> transition -> transition
@@ -392,7 +392,8 @@ fun keep_proof f =
 
 fun ignored' pos = empty |> name "<ignored>" |> position pos |> keep (fn _ => ());
 fun ignored pos = [ignored' pos];
-fun is_ignored tr = name_of tr = "<ignored>";
+fun is_ignored' tr = name_of tr = "<ignored>";
+val is_ignored = fn [] => false | (tr :: _) => is_ignored' tr;
 
 fun malformed' pos msg =
   empty |> name "<malformed>" |> position pos |> keep (fn _ => error msg);
@@ -700,19 +701,19 @@ fun timing_estimate elem =
   let val trs = tl (Thy_Syntax.flat_element elem)
   in fold (fn tr => fn t => get_timing tr + t) trs Time.zeroTime end;
 
-fun proof_future_enabled estimate st =
+fun future_proofs_enabled estimate st =
   (case try proof_of st of
     NONE => false
   | SOME state =>
       not (Proof.is_relevant state) andalso
        (if can (Proof.assert_bottom true) state
-        then Goal.future_enabled 1
-        else Goal.future_enabled 2 orelse Goal.future_enabled_timing estimate));
+        then Future.proofs_enabled 1
+        else Future.proofs_enabled 2 orelse Future.proofs_enabled_timing estimate));
 
 fun atom_result keywords tr st =
   let
     val st' =
-      if Goal.future_enabled 1 andalso Keyword.is_diag keywords (name_of tr) then
+      if Future.proofs_enabled 1 andalso Keyword.is_diag keywords (name_of tr) then
         (Execution.fork
           {name = "Toplevel.diag", pos = pos_of tr, pri = ~1}
           (fn () => command tr st); st)
@@ -728,7 +729,7 @@ fun element_result keywords (Thy_Syntax.Element (tr, NONE)) st = atom_result key
         val (body_elems, end_tr) = element_rest;
         val estimate = timing_estimate elem;
       in
-        if not (proof_future_enabled estimate st')
+        if not (future_proofs_enabled estimate st')
         then
           let
             val proof_trs = maps Thy_Syntax.flat_element body_elems @ [end_tr];

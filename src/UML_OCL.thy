@@ -92,8 +92,8 @@ by(simp add: OclValid_def true_def k_def)+
 generation_syntax [ (*deep
                       (*(generation_semantics [ analysis (*, oid_start 10*) ])*)
                       (THEORY Model_generated)
-                      (IMPORTS ["../src/UML_Main", "../src/compiler/Static"]
-                               "../src/compiler/Generator_dynamic_sequential")
+                      (IMPORTS ["OCL.UML_Main", "FOCL.Static"]
+                               "FOCL.Generator_dynamic_sequential")
                       SECTION
                       (*SORRY*)
                       [ (*in OCaml module_name M*)

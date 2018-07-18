@@ -43,7 +43,7 @@ chapter{* Part ... *}
 
 theory   Bank_Test_Model
 imports
-  "../src/UML_OCL"
+  FOCL.UML_OCL
 begin
 
 Class Account

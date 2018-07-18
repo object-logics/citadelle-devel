@@ -43,7 +43,7 @@ chapter{* Part ... *}
 
 theory   Clocks_Lib_Model
 imports
-  "../src/UML_OCL"
+  FOCL.UML_OCL
 begin
 
 Class Clock

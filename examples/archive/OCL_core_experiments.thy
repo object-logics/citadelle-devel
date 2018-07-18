@@ -46,7 +46,7 @@
 theory
   OCL_core_experiments
 imports
-  "../../src/UML_Logic"
+  OCL.UML_Logic
 begin
 
 section{* OCL Core Definitions *}

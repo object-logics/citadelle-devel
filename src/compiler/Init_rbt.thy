@@ -45,7 +45,7 @@ theory Init_rbt
 imports "../compiler_generic/Init"
         "HOL-Library.RBT"
         "HOL-Library.Char_ord"
-        "HOL-Library.List_lexord"
+        "HOL-Library.List_Lexorder"
         "HOL-Library.Product_Lexorder"
 begin
 

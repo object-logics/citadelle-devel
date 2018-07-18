@@ -10,8 +10,8 @@ sig
   val check_comments: Proof.context -> Symbol_Pos.T list -> unit
   val output_token: Proof.context -> Token.T -> Latex.text list
   val output_source: Proof.context -> string -> Latex.text list
-  val present_thy: theory -> (Toplevel.transition * Toplevel.state) list ->
-    Token.T list -> Latex.text list
+  type segment = {span: Command_Span.span, command: Toplevel.transitions, state: Toplevel.state}
+  val present_thy: theory -> segment list -> Latex.text list
   val pretty_term: Proof.context -> term -> Pretty.T
   val pretty_thm: Proof.context -> thm -> Pretty.T
   val lines: Latex.text list -> Latex.text list
@@ -117,13 +117,14 @@ fun output_comment_symbols ctxt {antiq} (comment, syms) =
       |> maps output_symbols_antiq
   | (SOME comment, _) => output_comment ctxt (comment, syms));
 
-in
-
 fun output_body ctxt antiq bg en syms =
   Comment.read_body syms
   |> maps (output_comment_symbols ctxt {antiq = antiq})
-  |> Latex.enclose_body bg en
-and output_token ctxt tok =
+  |> Latex.enclose_body bg en;
+
+in
+
+fun output_token ctxt tok =
   let
     fun output antiq bg en =
       output_body ctxt antiq bg en (Input.source_explode (Token.input_of tok));
@@ -245,7 +246,7 @@ fun present_span thy keywords document_tags span state state'
   let
     val ctxt' =
       Toplevel.presentation_context state'
-        handle Toplevel.UNDEF => Proof_Context.init_global (Context.get_theory thy Context.PureN);
+        handle Toplevel.UNDEF => Proof_Context.get_global thy Context.PureN;
     val present = fold (fn (tok, (flag, 0)) =>
         fold cons (present_token ctxt' tok)
         #> cons (Latex.string flag)
@@ -338,15 +339,10 @@ val locale =
 
 in
 
-fun present_thy thy command_results toks =
+type segment = {span: Command_Span.span, command: Toplevel.transitions, state: Toplevel.state};
+
+fun present_thy thy (segments: segment list) =
   let
-    fun split_trans [] acc = rev acc
-      | split_trans (x :: xs) acc =
-          case chop_prefix let val pos_of = Toplevel.pos_of o fst
-                               val p = pos_of x in fn t => p = pos_of t end
-                           xs of
-               (xs1, xs2) => split_trans xs2 ((x :: xs1) :: acc);
-    val command_results = split_trans command_results [];
     val keywords = Thy_Header.get_keywords thy;
 
 
@@ -411,28 +407,33 @@ fun present_thy thy command_results toks =
       >> (fn (((toks1, (cmd, tok2)), toks3), tok4) =>
           make_span (the cmd) (toks1 @ (tok2 :: (toks3 @ the_default [] tok4))));
 
-    val spans = toks
+    val spans = segments
+      |> maps (Command_Span.content o #span)
       |> drop_suffix Token.is_space
       |> Source.of_list
       |> Source.source' 0 Token.stopper (Scan.error (Scan.bulk tokens >> flat))
       |> Source.source stopper (Scan.error (Scan.bulk span))
       |> Source.exhaust;
 
+    val command_results =
+      segments |> map_filter (fn {command, state, ...} =>
+        if Toplevel.is_ignored command then NONE else SOME (command, state));
+
 
     (* present commands *)
 
     val document_tags = space_explode "," (Options.default_string \<^system_option>\<open>document_tags\<close>);
 
-    fun present_command tr span st st' =
-      Toplevel.setmp_thread_position tr
+    fun present_command trs span st st' =
+      Toplevel.setmp_thread_position (hd trs)
         (present_span thy keywords document_tags span st st');
 
     fun present _ [] = I
-      | present st (((tr, st'), span) :: rest) = present_command tr span st st' #> present st' rest;
+      | present st ((span, (tr, st')) :: rest) = present_command tr span st st' #> present st' rest;
   in
     if length command_results = length spans then
       ((NONE, []), NONE, true, [], (I, I))
-      |> present Toplevel.toplevel (map (apfst List.last) (command_results ~~ spans))
+      |> present Toplevel.toplevel (spans ~~ command_results)
       |> present_trailer
       |> rev
     else error "Messed-up outer syntax for presentation"

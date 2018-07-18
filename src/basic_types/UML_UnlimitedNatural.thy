@@ -44,7 +44,7 @@
  ******************************************************************************)
 
 theory  UML_UnlimitedNatural
-imports "../UML_PropertyProfiles"
+imports OCL.UML_PropertyProfiles
 begin
 
 section{* ... *}

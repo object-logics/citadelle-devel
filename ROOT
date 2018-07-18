@@ -103,16 +103,16 @@ session "OCL-all-dirty" in "src" = "HOL-Library" +
   options [quick_and_dirty,document=pdf,document_output=document_generated,
            document_variants="document=afp,-annexa,-noexample",
            show_question_marks = false]
+  sessions
+    OCL
+    FOCL
   theories
-    "../src/UML_Main"
     "../src/basic_types/UML_UnlimitedNatural"
 
     "../examples/empirical_evaluation/Class_model"
 
     "../src/compiler/Generator_static"
 
-    "../examples/Employee_Model/Analysis/Analysis_OCL"
-    "../examples/Employee_Model/Design/Design_OCL"
     "../doc/Employee_AnalysisModel_UMLPart_generated"
     "../doc/Employee_DesignModel_UMLPart_generated"
 
@@ -140,23 +140,6 @@ session "OCL-all-dirty" in "src" = "HOL-Library" +
     "../examples/archive/OCL_core_experiments"
     "../examples/archive/OCL_lib_Gogolla_challenge_naive"
     "../examples/archive/OCL_lib_Gogolla_challenge_integer"
-  document_files
-    "conclusion.tex"
-    "figures/AbstractSimpleChair.pdf"
-    "figures/jedit.png"
-    (*"figures/logo_focl.pdf"*)
-    "figures/pdf.png"
-    "figures/person.png"
-    "figures/pre-post.pdf"
-    "fixme.sty"
-    "hol-ocl-isar.sty"
-    "introduction.tex"
-    "lstisar.sty"
-    "omg.sty"
-    "prooftree.sty"
-    "root.bib"
-    "root.tex"
-    "FOCL_Syntax.tex"
 
 
 (******************************************************)

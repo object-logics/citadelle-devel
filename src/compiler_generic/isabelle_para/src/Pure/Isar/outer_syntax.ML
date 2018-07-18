@@ -31,6 +31,7 @@ sig
   val parse_tokens: theory -> Proof.state option -> Token.T list -> Toplevel.transitions list
   val parse: theory -> Proof.state option -> Position.T -> string -> Toplevel.transitions list
   val parse_spans: Token.T list -> Command_Span.span list
+  val make_span: Token.T list -> Command_Span.span
   val command_reports: theory -> Token.T -> Position.report_text list
   val check_command: Proof.context -> command_keyword -> string
 end;
@@ -277,6 +278,11 @@ fun parse_spans toks =
   fold parse toks ([], [], []) |> flush |> rev;
 
 end;
+
+fun make_span toks =
+  (case parse_spans toks of
+    [span] => span
+  | _ => Command_Span.Span (Command_Span.Malformed_Span, toks));
 
 
 (* check commands *)

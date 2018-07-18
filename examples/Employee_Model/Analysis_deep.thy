@@ -50,8 +50,8 @@ begin
 generation_syntax [ deep
                       (generation_semantics [ analysis (*, oid_start 10*) ])
                       (THEORY Employee_AnalysisModel_UMLPart_generated)
-                      (IMPORTS ["../src/UML_Main", "../src/compiler/Static"]
-                               "../src/compiler/Generator_dynamic_sequential")
+                      (IMPORTS ["OCL.UML_Main", "FOCL.Static"]
+                               "FOCL.Generator_dynamic_sequential")
                       SECTION
                       (*SORRY*) (*no_dirty*)
                       [ (* in Haskell *)

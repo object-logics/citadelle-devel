@@ -12,17 +12,21 @@ sig
   val read: Keyword.keywords -> theory -> Proof.state option -> Path.T-> (unit -> theory) ->
     blob list * int -> Token.T list -> Toplevel.transitions
   type eval
+  val eval_command_id: eval -> Document_ID.command
   val eval_exec_id: eval -> Document_ID.exec
   val eval_eq: eval * eval -> bool
   val eval_running: eval -> bool
   val eval_finished: eval -> bool
+  val eval_result_command: eval -> Toplevel.transitions
   val eval_result_state: eval -> Toplevel.state
   val eval: Keyword.keywords -> Path.T -> (unit -> theory) ->
-    blob list * int -> Token.T list -> eval -> eval
+    blob list * int -> Document_ID.command -> Token.T list -> eval -> eval
   type print
+  type print_fn = Toplevel.transition -> Toplevel.state -> unit
+  val print0: {pri: int, print_fn: print_fn} -> eval -> print
   val print: bool -> (string * string list) list -> Keyword.keywords -> string ->
     eval -> print list -> print list option
-  type print_fn = Toplevel.transition -> Toplevel.state -> unit
+  val parallel_print: print -> bool
   type print_function =
     {keywords: Keyword.keywords, command_name: string, args: string list, exec_id: Document_ID.exec} ->
       {delay: Time.time option, pri: int, persistent: bool, strict: bool, print_fn: print_fn} option
@@ -33,6 +37,7 @@ sig
   val no_exec: exec
   val exec_ids: exec option -> Document_ID.exec list
   val exec: Document_ID.execution -> exec -> unit
+  val exec_parallel_prints: Document_ID.execution -> Future.task list -> exec -> exec option
 end;
 
 structure Command: COMMAND =
@@ -162,7 +167,11 @@ fun init_eval_state opt_thy =
   command = [],
   state = [case opt_thy of NONE => Toplevel.toplevel | SOME thy => Toplevel.theory_toplevel thy]};
 
-datatype eval = Eval of {exec_id: Document_ID.exec, eval_process: eval_states lazy};
+datatype eval =
+  Eval of
+    {command_id: Document_ID.command, exec_id: Document_ID.exec, eval_process: eval_states lazy};
+
+fun eval_command_id (Eval {command_id, ...}) = command_id;
 
 fun eval_exec_id (Eval {exec_id, ...}) = exec_id;
 val eval_eq = op = o apply2 eval_exec_id;
@@ -173,6 +182,7 @@ fun eval_finished (Eval {eval_process, ...}) = Lazy.is_finished eval_process;
 fun eval_result (Eval {eval_process, ...}) =
   task_context (Future.worker_subgroup ()) Lazy.force eval_process;
 
+val eval_result_command = #command o eval_result;
 val eval_result_state = List.last o #state o eval_result;
 
 local
@@ -191,7 +201,7 @@ fun reset_state keywords tr st0 = Toplevel.setmp_thread_position tr (fn () =>
   end) ();
 
 fun run keywords int tr st =
-  if Goal.future_enabled 1 andalso Keyword.is_diag keywords (Toplevel.name_of tr) then
+  if Future.proofs_enabled 1 andalso Keyword.is_diag keywords (Toplevel.name_of tr) then
     (Execution.fork {name = "Toplevel.diag", pos = Toplevel.pos_of tr, pri = ~1}
       (fn () => Toplevel.command_exception int tr st); ([], SOME st))
   else Toplevel.command_errors int tr st;
@@ -270,7 +280,7 @@ fun eval_state keywords span l_tr ({state, ...}: eval_states) =
 
 in
 
-fun eval keywords master_dir init blobs_info span eval0 =
+fun eval keywords master_dir init blobs_info command_id span eval0 =
   let
     val exec_id = Document_ID.make ();
     fun process () =
@@ -284,7 +294,9 @@ fun eval keywords master_dir init blobs_info span eval0 =
             (fn () =>
               read keywords thy st master_dir init blobs_info span |> Toplevel.exec_id exec_id) ();
       in eval_state keywords span tr eval_state0 end;
-  in Eval {exec_id = exec_id, eval_process = Lazy.lazy_name "Command.eval" process} end;
+  in
+    Eval {command_id = command_id, exec_id = exec_id, eval_process = Lazy.lazy_name "Command.eval" process}
+  end;
 
 end;
 
@@ -321,37 +333,41 @@ fun print_persistent (Print {persistent, ...}) = persistent;
 
 val overlay_ord = prod_ord string_ord (list_ord string_ord);
 
+fun make_print (name, args) {delay, pri, persistent, strict, print_fn} eval =
+  let
+    val exec_id = Document_ID.make ();
+    fun process () =
+      let
+        val {failed, command, state = st', ...} = eval_result eval;
+        val tr = Toplevel.exec_id exec_id command;
+      in
+        if failed andalso strict then ()
+        else List.app (fn (tr, st') => print_error tr
+                                                   (try Toplevel.generic_theory_of st')
+                                                   (fn () => print_fn tr st'))
+                      (ListPair.zip (tr, st'))
+      end;
+  in
+    Print {
+      name = name, args = args, delay = delay, pri = pri, persistent = persistent,
+      exec_id = exec_id, print_process = Lazy.lazy_name "Command.print" process}
+  end;
+
+fun bad_print name_args exn =
+  make_print name_args {delay = NONE, pri = 0, persistent = false,
+    strict = false, print_fn = fn _ => fn _ => Exn.reraise exn};
+
 in
+
+fun print0 {pri, print_fn} =
+  make_print ("", [serial_string ()])
+    {delay = NONE, pri = pri, persistent = true, strict = true, print_fn = print_fn};
 
 fun print command_visible command_overlays keywords command_name eval old_prints =
   let
     val print_functions = Synchronized.value print_functions;
 
-    fun make_print name args {delay, pri, persistent, strict, print_fn} =
-      let
-        val exec_id = Document_ID.make ();
-        fun process () =
-          let
-            val {failed, command, state = st', ...} = eval_result eval;
-            val tr = Toplevel.exec_id exec_id command;
-          in
-            if failed andalso strict then ()
-            else List.app (fn (tr, st') => print_error tr
-                                                       (try Toplevel.generic_theory_of st')
-                                                       (fn () => print_fn tr st'))
-                          (ListPair.zip (tr, st'))
-          end;
-      in
-        Print {
-          name = name, args = args, delay = delay, pri = pri, persistent = persistent,
-          exec_id = exec_id, print_process = Lazy.lazy_name "Command.print" process}
-      end;
-
-    fun bad_print name args exn =
-      make_print name args {delay = NONE, pri = 0, persistent = false,
-        strict = false, print_fn = fn _ => fn _ => Exn.reraise exn};
-
-    fun new_print name args get_pr =
+    fun new_print (name, args) get_pr =
       let
         val params =
          {keywords = keywords,
@@ -361,31 +377,39 @@ fun print command_visible command_overlays keywords command_name eval old_prints
       in
         (case Exn.capture (Runtime.controlled_execution NONE get_pr) params of
           Exn.Res NONE => NONE
-        | Exn.Res (SOME pr) => SOME (make_print name args pr)
-        | Exn.Exn exn => SOME (bad_print name args exn))
+        | Exn.Res (SOME pr) => SOME (make_print (name, args) pr eval)
+        | Exn.Exn exn => SOME (bad_print (name, args) exn eval))
       end;
 
-    fun get_print (a, b) =
-      (case find_first (fn Print {name, args, ...} => name = a andalso args = b) old_prints of
+    fun get_print (name, args) =
+      (case find_first (fn Print print => (#name print, #args print) = (name, args)) old_prints of
         NONE =>
-          (case AList.lookup (op =) print_functions a of
-            NONE => SOME (bad_print a b (ERROR ("Missing print function " ^ quote a)))
-          | SOME get_pr => new_print a b get_pr)
+          (case AList.lookup (op =) print_functions name of
+            NONE =>
+              SOME (bad_print (name, args) (ERROR ("Missing print function " ^ quote name)) eval)
+          | SOME get_pr => new_print (name, args) get_pr)
       | some => some);
 
-    val new_prints =
+    val retained_prints =
+      filter (fn print => print_finished print andalso print_persistent print) old_prints;
+    val visible_prints =
       if command_visible then
-        fold (fn (a, _) => cons (a, [])) print_functions command_overlays
+        fold (fn (name, _) => cons (name, [])) print_functions command_overlays
         |> sort_distinct overlay_ord
         |> map_filter get_print
-      else filter (fn print => print_finished print andalso print_persistent print) old_prints;
+      else [];
+    val new_prints = visible_prints @ retained_prints;
   in
     if eq_list print_eq (old_prints, new_prints) then NONE else SOME new_prints
   end;
 
+fun parallel_print (Print {pri, ...}) =
+  pri <= 0 orelse (Future.enabled () andalso Options.default_bool "parallel_print");
+
 fun print_function name f =
   Synchronized.change print_functions (fn funs =>
-   (if not (AList.defined (op =) funs name) then ()
+   (if name = "" then error "Unnamed print function" else ();
+    if not (AList.defined (op =) funs name) then ()
     else warning ("Redefining command print function: " ^ quote name);
     AList.update (op =) (name, f) funs));
 
@@ -419,7 +443,9 @@ val _ =
 type exec = eval * print list;
 
 fun init_exec opt_thy : exec =
-  (Eval {exec_id = Document_ID.none, eval_process = Lazy.value (init_eval_state opt_thy)}, []);
+  (Eval
+    {command_id = Document_ID.none, exec_id = Document_ID.none,
+      eval_process = Lazy.value (init_eval_state opt_thy)}, []);
 
 val no_exec = init_exec NONE;
 
@@ -438,27 +464,28 @@ fun run_process execution_id exec_id process =
 fun ignore_process process =
   Lazy.is_running process orelse Lazy.is_finished process;
 
-fun run_eval execution_id (Eval {exec_id, eval_process}) =
+fun run_eval execution_id (Eval {exec_id, eval_process, ...}) =
   if Lazy.is_finished eval_process then ()
   else run_process execution_id exec_id eval_process;
 
-fun run_print execution_id (Print {name, delay, pri, exec_id, print_process, ...}) =
+fun fork_print execution_id deps (Print {name, delay, pri, exec_id, print_process, ...}) =
+  let
+    val group = Future.worker_subgroup ();
+    fun fork () =
+      ignore ((singleton o Future.forks)
+        {name = name, group = SOME group, deps = deps, pri = pri, interrupts = true}
+        (fn () =>
+          if ignore_process print_process then ()
+          else run_process execution_id exec_id print_process));
+  in
+    (case delay of
+      NONE => fork ()
+    | SOME d => ignore (Event_Timer.request (Time.now () + d) fork))
+  end;
+
+fun run_print execution_id (print as Print {exec_id, print_process, ...}) =
   if ignore_process print_process then ()
-  else if pri <= 0 orelse (Multithreading.enabled () andalso Options.default_bool "parallel_print")
-  then
-    let
-      val group = Future.worker_subgroup ();
-      fun fork () =
-        ignore ((singleton o Future.forks)
-          {name = name, group = SOME group, deps = [], pri = pri, interrupts = true}
-          (fn () =>
-            if ignore_process print_process then ()
-            else run_process execution_id exec_id print_process));
-    in
-      (case delay of
-        NONE => fork ()
-      | SOME d => ignore (Event_Timer.request (Time.now () + d) fork))
-    end
+  else if parallel_print print then fork_print execution_id [] print
   else run_process execution_id exec_id print_process;
 
 in
@@ -466,7 +493,11 @@ in
 fun exec execution_id (eval, prints) =
   (run_eval execution_id eval; List.app (run_print execution_id) prints);
 
-end;
+fun exec_parallel_prints execution_id deps (exec as (Eval {eval_process, ...}, prints)) =
+  if Lazy.is_finished eval_process
+  then (List.app (fork_print execution_id deps) prints; NONE)
+  else SOME exec;
 
 end;
 
+end;

@@ -48,7 +48,7 @@ chapter{* Gogolla's challenge on Sets *}
 theory
   Isabelle_Finite_Set
 imports
-  "../../src/collection_types/UML_Set"
+  OCL.UML_Set
 begin
 
 no_notation None ("\<bottom>")

@@ -50,8 +50,7 @@ chapter{* Example: Linked List *}
 theory
   LinkedList
 imports
-  "../src/UML_OCL"
-  (* separate compilation : UML_OCL *)
+  FOCL.UML_OCL
 begin
 
 generation_syntax [ shallow ]

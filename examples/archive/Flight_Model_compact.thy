@@ -42,8 +42,7 @@
 theory
   Flight_Model_compact
 imports
-  "../../src/UML_OCL"
-  (* separate compilation : UML_OCL *)
+  FOCL.UML_OCL
 begin
 
 subsection\<open> Class Model \<close>
