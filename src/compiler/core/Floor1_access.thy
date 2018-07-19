@@ -136,7 +136,7 @@ definition "print_access_choose = start_map'''' O.definition o (\<lambda>expr _.
      ; lets = \<lambda>var exp. Definition (Term_rewrite (Term_basic [var]) \<open>=\<close> exp)
      ; lets' = \<lambda>var exp. Definition (Term_rewrite (Term_basic [var]) \<open>=\<close> (b exp))
      ; lets'' = \<lambda>var exp. Definition (Term_rewrite (Term_basic [var]) \<open>=\<close> (Term_lam \<open>l\<close> (\<lambda>var_l. Term_binop (b var_l) \<open>!\<close> (b exp))))
-     ; _(* ignored *) =
+     ; _\<comment> \<open>(ignored)\<close> =
         let l_flatten = \<open>L.flatten\<close> in
         [ lets l_flatten (let fun_foldl = \<lambda>f base.
                              Term_lam \<open>l\<close> (\<lambda>var_l. Term_app \<open>foldl\<close> [Term_lam \<open>acc\<close> f, base, a \<open>rev\<close> (b var_l)]) in
@@ -446,7 +446,7 @@ definition "print_access_dot_lemma_cp = start_map O.lemma o
                 (print_access_dot_lemma_cp_name isub_name dot_at_when attr_ty isup_attr)
                 [Term_app \<open>cp\<close> [Term_lam \<open>X\<close> (\<lambda>var_x. dot_attr (Term_annot_ocl (Term_basic [var_x]) name)) ]]
                 []
-                (if print_access_dot_cp_lemmas_set = [] then C.sorry (* fold l_hierarchy, take only subclass, unfold the corresponding definition *)
+                (if print_access_dot_cp_lemmas_set = [] then C.sorry \<comment> \<open>fold l_hierarchy, take only subclass, unfold the corresponding definition\<close>
                  else C.by [auto []]) ]))"
 
 definition "print_access_dot_lemmas_cp = start_map O.lemmas o (\<lambda>expr.
@@ -542,7 +542,7 @@ definition "print_access_is_repr = start_map'''' O.lemma o (\<lambda>expr design
                 (print_access_is_repr_name isub_name dot_at_when attr_ty isup_attr)
                 [ (var_def_dot, False, f (dot_attr (Term_annot_ocl (b var_X) name))) ]
                 (Term_app \<open>is_represented_in_state\<close> [b var_in_when_state, dot_attr (Term_basic [var_X]), b name_to, b var_tau])
-(let (* existential variables *)
+(let \<comment> \<open>existential variables\<close>
      v_a0 = \<open>a0\<close>
    ; v_a = \<open>a\<close>
    ; v_b = \<open>b\<close>
@@ -553,7 +553,7 @@ definition "print_access_is_repr = start_map'''' O.lemma o (\<lambda>expr design
    ; v_e = \<open>e\<close>
    ; v_aaa = \<open>aaa\<close>
 
-     (* schematic variables *)
+     \<comment> \<open>schematic variables\<close>
    ; vs_t = \<open>t\<close>
    ; vs_sel_any = \<open>sel_any\<close>
 

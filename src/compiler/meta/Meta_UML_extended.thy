@@ -48,54 +48,54 @@ begin
 subsection\<open>Type Definition\<close>
 
 datatype internal_oid = Oid nat
-datatype internal_oids = Oids nat (* start *)
-                              nat (* oid for assoc (incremented from start) *)
-                              nat (* oid for inh (incremented from start) *)
+datatype internal_oids = Oids nat \<comment> \<open>start\<close>
+                              nat \<comment> \<open>oid for assoc (incremented from start)\<close>
+                              nat \<comment> \<open>oid for inh (incremented from start)\<close>
 
-datatype ocl_def_base = OclDefInteger "string" (* integer digit *)
-                      | OclDefReal "string (* integer digit (left) *) \<times> string (* integer digit (right) *)"
+datatype ocl_def_base = OclDefInteger "string" \<comment> \<open>integer digit\<close>
+                      | OclDefReal "string \<comment> \<open>integer digit (left)\<close> \<times> string \<comment> \<open>integer digit (right)\<close>"
                       | OclDefString "string"
 
 datatype ocl_data_shallow = ShallB_term ocl_def_base
-                          | ShallB_str string (* binding *)
+                          | ShallB_str string \<comment> \<open>binding\<close>
                           | ShallB_self internal_oid
                           | ShallB_list "ocl_data_shallow list"
 
-datatype 'a ocl_list_attr = OclAttrNoCast 'a (* inh, own *)
+datatype 'a ocl_list_attr = OclAttrNoCast 'a \<comment> \<open>inh, own\<close>
                           | OclAttrCast
-                              string (* cast from *)
-                              "'a ocl_list_attr" (* cast entity *)
-                              'a (* inh, own *)
+                              string \<comment> \<open>cast from\<close>
+                              "'a ocl_list_attr" \<comment> \<open>cast entity\<close>
+                              'a \<comment> \<open>inh, own\<close>
 
-record ocl_instance_single = Inst_name :: "string option" (* None: fresh name to be generated *)
-                             Inst_ty :: "string option" (* type *)
-                             Inst_attr_with :: "string (* name *) option"
-                             Inst_attr :: "((  (string (* pre state *) \<times> string (* post state *)) option
-                                               (* state used when ocl_data_shallow is an object variable (for retrieving its oid) *)
-                                             \<times> string (*name*)
-                                             \<times> ocl_data_shallow) list) (* inh and own *)
+record ocl_instance_single = Inst_name :: "string option" \<comment> \<open>None: fresh name to be generated\<close>
+                             Inst_ty :: "string option" \<comment> \<open>type\<close>
+                             Inst_attr_with :: "string \<comment> \<open>name\<close> option"
+                             Inst_attr :: "((  (string \<comment> \<open>pre state\<close> \<times> string \<comment> \<open>post state\<close>) option
+                                               \<comment> \<open>state used when \<open>ocl_data_shallow\<close> is an object variable (for retrieving its oid)\<close>
+                                             \<times> string \<comment> \<open>name\<close>
+                                             \<times> ocl_data_shallow) list) \<comment> \<open>inh and own\<close>
                                            ocl_list_attr"
 
-datatype ocl_instance = OclInstance "ocl_instance_single list" (* mutual recursive *)
+datatype ocl_instance = OclInstance "ocl_instance_single list" \<comment> \<open>mutual recursive\<close>
 
 datatype ocl_def_base_l = OclDefBase "ocl_def_base list"
 
 datatype 'a ocl_def_state_core = OclDefCoreAdd ocl_instance_single
                                | OclDefCoreBinding 'a
 
-datatype ocl_def_state = OclDefSt  string (* name *)
-                                  "string (* name *) ocl_def_state_core list"
+datatype ocl_def_state = OclDefSt  string \<comment> \<open>name\<close>
+                                  "string \<comment> \<open>name\<close> ocl_def_state_core list"
 
-datatype ocl_def_pp_core = OclDefPPCoreAdd "string (* name *) ocl_def_state_core list"
-                         | OclDefPPCoreBinding string (* name *)
+datatype ocl_def_pp_core = OclDefPPCoreAdd "string \<comment> \<open>name\<close> ocl_def_state_core list"
+                         | OclDefPPCoreBinding string \<comment> \<open>name\<close>
 
 datatype ocl_def_transition = OclDefPP
-                              "string option" (* None: fresh name to be generated *)
-                              ocl_def_pp_core (* pre *)
-                              "ocl_def_pp_core option" (* post *) (* None: same as pre *)
+                              "string option" \<comment> \<open>None: fresh name to be generated\<close>
+                              ocl_def_pp_core \<comment> \<open>pre\<close>
+                              "ocl_def_pp_core option" \<comment> \<open>post\<close> \<comment> \<open>None: same as pre\<close>
 
-datatype ocl_class_tree = OclClassTree nat (* nb child *)
-                                       nat (* depth *)
+datatype ocl_class_tree = OclClassTree nat \<comment> \<open>nb child\<close>
+                                       nat \<comment> \<open>depth\<close>
 
 subsection\<open>Object ID Management\<close>
 

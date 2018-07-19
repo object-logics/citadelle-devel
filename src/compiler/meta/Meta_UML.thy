@@ -50,13 +50,13 @@ subsection\<open>Type Definition\<close>
 
 datatype ocl_collection = Set
                         | Sequence
-                        | Ordered0 (* ordered set *)
-                        | Subsets0 (*binding*)
+                        | Ordered0 \<comment> \<open>ordered set\<close>
+                        | Subsets0 \<^cancel>\<open>binding\<close>
                         | Union0
-                        | Redefines0 (*binding*)
-                        | Derived0 (*string*)
-                        | Qualifier0 (*binding \<times> use_oclty*)
-                        | Nonunique0 (*bag*)
+                        | Redefines0 \<^cancel>\<open>binding\<close>
+                        | Derived0 \<^cancel>\<open>string\<close>
+                        | Qualifier0 \<^cancel>\<open>binding \<times> use_oclty\<close>
+                        | Nonunique0 \<^cancel>\<open>bag\<close>
 
 datatype ocl_multiplicity_single = Mult_nat nat
                                  | Mult_star
@@ -64,7 +64,7 @@ datatype ocl_multiplicity_single = Mult_nat nat
 
 record ocl_multiplicity = TyMult :: "(ocl_multiplicity_single \<times> ocl_multiplicity_single option) list"
                           TyRole :: "string option"
-                          TyCollect :: "ocl_collection list" (* return type of the accessor (constrained by the above multiplicity) *)
+                          TyCollect :: "ocl_collection list" \<comment> \<open>return type of the accessor (constrained by the above multiplicity)\<close>
 
 record ocl_ty_class_node =  TyObjN_ass_switch :: nat
                             TyObjN_role_multip :: ocl_multiplicity
@@ -74,11 +74,11 @@ record ocl_ty_class =       TyObj_name :: string
                             TyObj_ass_arity :: nat
                             TyObj_from :: ocl_ty_class_node
                             TyObj_to :: ocl_ty_class_node
-datatype ocl_ty_obj_core =  OclTyCore_pre string (* class name, untyped *) (* FIXME perform the typing separately *)
-                          | OclTyCore ocl_ty_class (* class name, typed *)
+datatype ocl_ty_obj_core =  OclTyCore_pre string \<comment> \<open>class name, untyped\<close> (* FIXME perform the typing separately *)
+                          | OclTyCore ocl_ty_class \<comment> \<open>class name, typed\<close>
 datatype ocl_ty_obj =       OclTyObj  ocl_ty_obj_core
-                                     "ocl_ty_obj_core list (* the 'and' semantics *)
-                                                           list (* 'x # ...' means 'x < ...' *)" (* superclass *)
+                                     "ocl_ty_obj_core list \<comment> \<open>the \<^theory_text>\<open>and\<close> semantics\<close>
+                                                           list \<comment> \<open>\<open>x # \<dots>\<close> means \<open>x < \<dots>\<close>\<close>" \<comment> \<open>superclass\<close>
 datatype ocl_ty =           OclTy_base_void (* NOTE can be merged in a generic tuple *)
                           | OclTy_base_boolean
                           | OclTy_base_integer
@@ -88,11 +88,11 @@ datatype ocl_ty =           OclTy_base_void (* NOTE can be merged in a generic t
                           | OclTy_object ocl_ty_obj
                           | OclTy_collection ocl_multiplicity ocl_ty
                           | OclTy_pair ocl_ty ocl_ty (* NOTE can be merged in a generic tuple *)
-                          | OclTy_binding "string option (* name *) \<times> ocl_ty" (* NOTE can be merged in a generic tuple *)
+                          | OclTy_binding "string option \<comment> \<open>name\<close> \<times> ocl_ty" (* NOTE can be merged in a generic tuple *)
                           | OclTy_arrow ocl_ty ocl_ty
                           | OclTy_class_syn string
                           | OclTy_enum string
-                          | OclTy_raw string (* denoting raw HOL-type *) (* FIXME to be removed *)
+                          | OclTy_raw string \<comment> \<open>denoting raw HOL-type\<close> (* FIXME to be removed *)
 
 
 datatype ocl_association_type = OclAssTy_native_attribute
@@ -106,43 +106,43 @@ record ocl_association =        OclAss_type     :: ocl_association_type
 datatype ocl_ctxt_prefix = OclCtxtPre | OclCtxtPost
 
 datatype ocl_ctxt_term = T_pure "term"
-                                "string option" (* represents the unparsed version of the term *)
-                       | T_to_be_parsed string (* raw, it includes extra quoting characters like DEL (char 127) *)
-                                        string (* same string but escaped without those quoting characters *)
+                                "string option" \<comment> \<open>represents the unparsed version of the term\<close>
+                       | T_to_be_parsed string \<comment> \<open>raw, it includes extra quoting characters like DEL (char 127)\<close>
+                                        string \<comment> \<open>same string but escaped without those quoting characters\<close>
                        | T_lambda string ocl_ctxt_term
-datatype ocl_prop = OclProp_ctxt "string option" (* name *) ocl_ctxt_term
-                  (*| OclProp_rel ocl_ty_obj (* states that the constraint should be true *)
-                  | OclProp_ass ocl_association_relation (* states the relation as true *)*)
-datatype ocl_ctxt_term_inv = T_inv bool (* True: existential *) ocl_prop
+datatype ocl_prop = OclProp_ctxt "string option" \<comment> \<open>name\<close> ocl_ctxt_term
+                  \<^cancel>\<open>| OclProp_rel ocl_ty_obj \<comment> \<open>states that the constraint should be true\<close>
+                  | OclProp_ass ocl_association_relation \<comment> \<open>states the relation as true\<close>\<close>
+datatype ocl_ctxt_term_inv = T_inv bool \<comment> \<open>True: existential\<close> ocl_prop
 datatype ocl_ctxt_term_pp = T_pp ocl_ctxt_prefix ocl_prop
                           | T_invariant ocl_ctxt_term_inv
 
-record ocl_ctxt_pre_post = Ctxt_fun_name :: string (* function name *)
+record ocl_ctxt_pre_post = Ctxt_fun_name :: string \<comment> \<open>function name\<close>
                            Ctxt_fun_ty :: ocl_ty
                            Ctxt_expr :: "ocl_ctxt_term_pp list"
 
 datatype ocl_ctxt_clause = Ctxt_pp ocl_ctxt_pre_post
                          | Ctxt_inv ocl_ctxt_term_inv
-record ocl_ctxt = Ctxt_param :: "string list" (* param *)
+record ocl_ctxt = Ctxt_param :: "string list" \<comment> \<open>param\<close>
                   Ctxt_ty :: ocl_ty_obj
                   Ctxt_clause :: "ocl_ctxt_clause list"
 
 datatype ocl_class =   OclClass
-                         string (* name of the class *)
-                         "(string (* name *) \<times> ocl_ty) list" (* attribute *)
-                         "ocl_class list" (* link to subclasses *)
+                         string \<comment> \<open>name of the class\<close>
+                         "(string \<comment> \<open>name\<close> \<times> ocl_ty) list" \<comment> \<open>attribute\<close>
+                         "ocl_class list" \<comment> \<open>link to subclasses\<close>
 
 record ocl_class_raw = ClassRaw_name :: ocl_ty_obj
-                       ClassRaw_own :: "(string (* name *) \<times> ocl_ty) list" (* attribute *)
+                       ClassRaw_own :: "(string \<comment> \<open>name\<close> \<times> ocl_ty) list" \<comment> \<open>attribute\<close>
                        ClassRaw_clause :: "ocl_ctxt_clause list"
-                       ClassRaw_abstract :: bool (* True: abstract *)
+                       ClassRaw_abstract :: bool \<comment> \<open>True: abstract\<close>
 
 datatype ocl_ass_class = OclAssClass ocl_association
                                      ocl_class_raw
 
-datatype ocl_class_synonym = OclClassSynonym string (* name alias *) ocl_ty
+datatype ocl_class_synonym = OclClassSynonym string \<comment> \<open>name alias\<close> ocl_ty
 
-datatype ocl_enum = OclEnum string (* name *) "string (* constructor name *) list"
+datatype ocl_enum = OclEnum string \<comment> \<open>name\<close> "string \<comment> \<open>constructor name\<close> list"
 
 subsection\<open>Extending the Meta-Model\<close>
 
@@ -288,9 +288,9 @@ syntax "_rbt_fold" :: "_ \<Rightarrow> _" ("fold") translations "fold" \<rightle
 syntax "_rbt_entries" :: "_ \<Rightarrow> _" ("entries") translations "entries" \<rightleftharpoons> "CONST RBTS.entries"
 
 function (sequential) class_unflat_aux where
-(* (* FIXME replace with this simplified form *)
+(* FIXME replace with this simplified form *) \<^cancel>\<open>
    "class_unflat_aux rbt rbt_inv rbt_cycle r =
-   (case lookup rbt_cycle r of None (* cycle detection *) \<Rightarrow>
+   (case lookup rbt_cycle r of None \<comment> \<open>cycle detection\<close> \<Rightarrow>
       map_option
         (OclClass
           r
@@ -299,10 +299,10 @@ function (sequential) class_unflat_aux where
                 id
                 (case lookup rbt_inv r of None \<Rightarrow> [] | Some l \<Rightarrow> l))
     | _ \<Rightarrow> None)"
-*)
+\<close>
    "class_unflat_aux rbt rbt_inv rbt_cycle r =
    (case lookup rbt_inv r of None \<Rightarrow>
-      (case lookup rbt_cycle r of None (* cycle detection *) \<Rightarrow>
+      (case lookup rbt_cycle r of None \<comment> \<open>cycle detection\<close> \<Rightarrow>
             map_option
               (OclClass
                 r
@@ -317,7 +317,7 @@ function (sequential) class_unflat_aux where
                       ([]))
           | _ \<Rightarrow> None)
     | Some l \<Rightarrow>
-      (case lookup rbt_cycle r of None (* cycle detection *) \<Rightarrow>
+      (case lookup rbt_cycle r of None \<comment> \<open>cycle detection\<close> \<Rightarrow>
             map_option
               (OclClass
                 r
@@ -419,8 +419,8 @@ definition "normalize0 f l =
 definition "class_unflat = (\<lambda> (l_class, l_ass).
   let l =
     let const_oclany' = OclTyCore_pre const_oclany
-      ; rbt = (* fold classes:
-                 set \<open>OclAny\<close> as default inherited class (for all classes linking to zero inherited classes) *)
+      ; rbt = \<comment> \<open>fold classes:\<close>
+              \<comment> \<open>set \<open>OclAny\<close> as default inherited class (for all classes linking to zero inherited classes)\<close>
               insert
                 const_oclany
                 (ocl_class_raw.make (OclTyObj const_oclany' []) [] [] False)
@@ -429,8 +429,8 @@ definition "class_unflat = (\<lambda> (l_class, l_ass).
                     insert (cl_name_to_string cflat) (cflat \<lparr> ClassRaw_name := case ClassRaw_name cflat of OclTyObj n [] \<Rightarrow> OclTyObj n [[const_oclany']] | x \<Rightarrow> x \<rparr>))
                   l_class
                   RBT.empty) in
-    (* fold associations:
-       add remaining 'object' attributes *)
+    \<comment> \<open>fold associations:\<close>
+    \<comment> \<open>add remaining 'object' attributes\<close>
     L.map snd (entries (List.fold (\<lambda> (ass_oid, ass) \<Rightarrow>
       case let (l_none, l_some) = List.partition (\<lambda>(_, m). TyRole m = None) (OclAss_relation' ass ) in
            L.flatten [l_none, normalize0 (\<lambda>(_, m). case TyRole m of Some s \<Rightarrow> String.to_list s) l_some] of
@@ -499,7 +499,7 @@ fun str_of_ty where "str_of_ty e =
   | OclTy_base_real \<Rightarrow> \<open>Real\<close>
   | OclTy_base_string \<Rightarrow> \<open>String\<close>
   | OclTy_object (OclTyObj (OclTyCore_pre s) _) \<Rightarrow> s
-  (*| OclTy_object (OclTyObj (OclTyCore ty_obj) _)*)
+  \<^cancel>\<open>| OclTy_object (OclTyObj (OclTyCore ty_obj) _)\<close>
   | OclTy_collection t ocl_ty \<Rightarrow> (if is_sequence t then
                                     S.flatten [\<open>Sequence(\<close>, str_of_ty ocl_ty,\<open>)\<close>]
                                   else
@@ -562,7 +562,7 @@ definition "get_class_hierarchy_sub = (\<lambda> None \<Rightarrow> []
 definition "get_class_hierarchy_sub' = (\<lambda> None \<Rightarrow> []
                                         | Some next_dataty \<Rightarrow> get_class_hierarchy' next_dataty)"
 
-datatype position = EQ (* equal *) | LT (* less *) | GT (* greater *) | UN' (* uncomparable *)
+datatype position = EQ \<comment> \<open>equal\<close> | LT \<comment> \<open>less\<close> | GT \<comment> \<open>greater\<close> | UN' \<comment> \<open>uncomparable\<close>
 
 fun fold_less_gen where "fold_less_gen f_gen f_jump f l = (case l of
     x # xs \<Rightarrow> \<lambda>acc. fold_less_gen f_gen f_jump f xs (f_gen (f x) xs (f_jump acc))
@@ -582,8 +582,8 @@ definition "var_at_when_ocl_pre = \<open>@pre\<close>"
 datatype 'a tmp_sub = Tsub 'a
 record 'a inheritance =
   Inh :: 'a
-  Inh_sib :: "('a \<times> 'a list (* flat version of the 1st component *)) list" (* sibling *)
-  Inh_sib_unflat :: "'a list" (* sibling *)
+  Inh_sib :: "('a \<times> 'a list \<comment> \<open>flat version of the 1st component\<close>) list" \<comment> \<open>sibling\<close>
+  Inh_sib_unflat :: "'a list" \<comment> \<open>sibling\<close>
 datatype 'a tmp_inh = Tinh 'a
 datatype 'a tmp_univ = Tuniv 'a
 definition "of_inh = (\<lambda>Tinh l \<Rightarrow> l)"
@@ -602,7 +602,7 @@ fun fold_class_gen_aux where
                name
                l_attr
                (Tinh l_inh)
-               (Tsub (get_class_hierarchy_strict dataty)) (* order: bfs or dfs (modulo reversing) *)
+               (Tsub (get_class_hierarchy_strict dataty)) \<comment> \<open>order: bfs or dfs (modulo reversing)\<close>
                dataty
                accu in
   case dataty of [] \<Rightarrow> accu

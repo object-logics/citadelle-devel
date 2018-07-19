@@ -105,8 +105,8 @@ definition "print_infra_datatype_equiv_2of1_name_aux = print_infra_datatype_equi
 definition "print_infra_datatype_equiv_2of1 = start_map'' O.definition o (\<lambda>expr _ base_attr' _. map_class_gen_h'''
  (\<lambda>isub_name name _ l_attr l_inherited next_dataty.
   let (l_attr, l_inherited) = base_attr' (l_attr, of_inh l_inherited)
-    ; f_attr_own = (\<lambda>s. \<open>own\<close> @@ String.isub s (* fresh variable names *)) o fst
-    ; f_attr_inh = (\<lambda>s. \<open>inh\<close> @@ String.isub s (* fresh variable names *)) o fst
+    ; f_attr_own = (\<lambda>s. \<open>own\<close> @@ String.isub s \<comment> \<open>fresh variable names\<close>) o fst
+    ; f_attr_inh = (\<lambda>s. \<open>inh\<close> @@ String.isub s \<comment> \<open>fresh variable names\<close>) o fst
     ; (l_attr, l_inherited) = (L.map f_attr_own l_attr, L.map f_attr_inh (L.flatten l_inherited))
     ; a = \<lambda>f x. Term_app f [x]
     ; b = \<lambda>s. Term_basic [s]
@@ -162,9 +162,9 @@ definition "print_infra_datatype_equiv_1of2_name_get_oid_inh = print_infra_datat
 definition "print_infra_datatype_equiv_1of2 = start_map'' O.definition o (\<lambda>expr _ base_attr' _. map_class_gen_h'''
  (\<lambda>isub_name name _ l_attr l_inherited next_dataty.
   let (l_attr, l_inherited) = base_attr' (l_attr, of_inh l_inherited)
-    ; f_attr_own = (\<lambda>s. \<open>own\<close> @@ String.isub s (* fresh variable names *)) o fst
-    ; f_attr_inh = (\<lambda>s. \<open>inh\<close> @@ String.isub s (* fresh variable names *)) o fst
-    ; f_attr_var = (\<lambda>s. \<open>var\<close> @@ String.isub s (* fresh variable names *)) o fst
+    ; f_attr_own = (\<lambda>s. \<open>own\<close> @@ String.isub s \<comment> \<open>fresh variable names\<close>) o fst
+    ; f_attr_inh = (\<lambda>s. \<open>inh\<close> @@ String.isub s \<comment> \<open>fresh variable names\<close>) o fst
+    ; f_attr_var = (\<lambda>s. \<open>var\<close> @@ String.isub s \<comment> \<open>fresh variable names\<close>) o fst
     ; (l_attr', l_attr, l_inherited', l_inherited) =
         ( L.map f_attr_var l_attr
         , L.map f_attr_own l_attr
@@ -246,9 +246,9 @@ definition "print_infra_datatype_equiv_1_idempo_name = \<open>class_ty_ext_equiv
 definition "print_infra_datatype_equiv_1_idempo = start_map'' O.lemma o (\<lambda>expr _ base_attr' _. map_class_gen_h'''
  (\<lambda>isub_name name _ l_attr l_inherited next_dataty.
   let (l_attr, l_inherited) = base_attr' (l_attr, of_inh l_inherited)
-    ; f_attr_own = (\<lambda>s. \<open>own\<close> @@ String.isub s (* fresh variable names *)) o fst
-    ; f_attr_inh = (\<lambda>s. \<open>inh\<close> @@ String.isub s (* fresh variable names *)) o fst
-    ; f_attr_var = (\<lambda>s. \<open>var\<close> @@ String.isub s (* fresh variable names *)) o fst
+    ; f_attr_own = (\<lambda>s. \<open>own\<close> @@ String.isub s \<comment> \<open>fresh variable names\<close>) o fst
+    ; f_attr_inh = (\<lambda>s. \<open>inh\<close> @@ String.isub s \<comment> \<open>fresh variable names\<close>) o fst
+    ; f_attr_var = (\<lambda>s. \<open>var\<close> @@ String.isub s \<comment> \<open>fresh variable names\<close>) o fst
     ; (l_attr', l_attr, l_inherited', l_inherited) =
         ( L.map f_attr_var l_attr
         , L.map f_attr_own l_attr
@@ -341,7 +341,7 @@ definition "print_infra_enum_syn _ env = (\<lambda>f1 f2. (L.flatten [f1 (D_inpu
 definition "print_infra_type_synonym_class _ = start_map id
   (L.map O.type_synonym
     (let ty = \<lambda> t s. Type_synonym' (str_of_ty t) (Typ_apply (Typ_base s) [Typ_base \<open>\<AA>\<close>]) in
-     (* base type *)
+     \<comment> \<open>base type\<close>
      ty OclTy_base_void ty_void #
      ty OclTy_base_boolean ty_boolean #
      ty OclTy_base_integer ty_integer #
@@ -362,7 +362,7 @@ definition "print_infra_type_synonym_class_higher expr = start_map O.type_synony
       (\<lambda>isub_name name _ _ _ _.
         [ Type_synonym' name
                        (option (option (Typ_base (isub_name datatype_name))))
-        (*, Type_synonym' name (Typ_apply_paren \<open>\<cdot>\<close> \<open>\<close> (Typ_base (name @@ \<open>'\<close>)))*)])
+        \<^cancel>\<open>, Type_synonym' name (Typ_apply_paren \<open>\<cdot>\<close> \<open>\<close> (Typ_base (name @@ \<open>'\<close>)))\<close>])
       expr))"
 
 definition "print_infra_type_synonym_class_rec = (\<lambda>expr env.

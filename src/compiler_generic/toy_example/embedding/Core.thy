@@ -59,7 +59,7 @@ datatype ('a, 'b) embedding = Embed_theories "('a \<Rightarrow> 'b \<Rightarrow>
                                            "'a \<Rightarrow> 'b \<Rightarrow> semi__locale \<times> 'b"
                                            "('a \<Rightarrow> 'b \<Rightarrow> semi__theory list \<times> 'b) list"
 
-type_synonym 'a embedding' = "('a, compiler_env_config) embedding" (* polymorphism weakening needed by code_reflect *)
+type_synonym 'a embedding' = "('a, compiler_env_config) embedding" \<comment> \<open>polymorphism weakening needed by \<^theory_text>\<open>code_reflect\<close>\<close>
 
 definition "L_fold f =
  (\<lambda> Embed_theories l \<Rightarrow> List.fold f l
@@ -129,7 +129,7 @@ definition "txt' s = txt (\<lambda>_. s)"
 definition "txt'' = txt' o S.flatten"
 
 definition thy_class ::
-  (* polymorphism weakening needed by code_reflect *)
+  \<comment> \<open>polymorphism weakening needed by \<^theory_text>\<open>code_reflect\<close>\<close>
   "_ embedding'" where \<open>thy_class =
  (let section = section' o (\<lambda>s. \<open>Class Model: \<close> @@ s) in
   Embed_theories
@@ -169,7 +169,7 @@ definition "thy_class_synonym = Embed_theories []"
 definition "thy_class_tree = Embed_theories []"
 definition "thy_class_flat = Embed_theories []"
 definition "thy_association = Embed_theories []"
-definition  thy_instance :: (* polymorphism weakening needed by code_reflect *) "_ embedding'" where
+definition  thy_instance :: \<comment> \<open>polymorphism weakening needed by \<^theory_text>\<open>code_reflect\<close>\<close> "_ embedding'" where
            "thy_instance = Embed_theories
                              [ section' \<open>Instance\<close>
                              , PRINT_examp_instance_defassoc
@@ -291,7 +291,7 @@ definition "fold_thy' f_env_save f_try f_accu_reset f =
    | META_flush_all meta \<Rightarrow> comp_env_input_class_mk (fold_thy0 meta thy_flush_all)) f))"
 
 definition "compiler_env_config_update f env =
-  (* WARNING The semantics of the meta-embedded language is not intended to be reset here (like oid_start), only syntactic configurations of the compiler (path, etc...) *)
+  \<comment> \<open>WARNING The semantics of the meta-embedded language is not intended to be reset here (like \<open>oid_start\<close>), only syntactic configurations of the compiler (path, etc...)\<close>
  (let env' = f env in
   if D_input_meta env = [] then
     env'

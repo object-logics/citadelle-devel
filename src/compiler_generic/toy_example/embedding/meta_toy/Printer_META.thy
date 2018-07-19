@@ -113,9 +113,9 @@ definition "of_boot_setup_env env = (\<lambda> Boot_setup_env e \<Rightarrow>
             \<open>K\<close>
             [ SML.let_open
                 \<open>META\<close>
-                ((* Instead of using
-                    (*sml_of_compiler_env_config SML_apply (\<lambda>x. SML_basic [x]) e*)
-                    the following allows to 'automatically' return an uncurried expression: *)
+                (\<comment> \<open>Instead of using\<close>
+                 \<comment> \<open>\<open>sml_of_compiler_env_config SML_apply (\<lambda>x. SML_basic [x]) e\<close>\<close>
+                 \<comment> \<open>the following allows to 'automatically' return an uncurried expression:\<close>
                  SML_basic [sml_of_compiler_env_config sml_apply id e])]])))"
 
 declare[[cartouche_type' = "fun\<^sub>p\<^sub>r\<^sub>i\<^sub>n\<^sub>t\<^sub>f"]]

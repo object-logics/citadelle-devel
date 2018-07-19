@@ -56,13 +56,13 @@ datatype semi__val_fun = Sval
                        | Sfun
 
 datatype semi__term'0 = SML_string string
-                      | SML_rewrite semi__term'0 (* left *) string (* symb rewriting *) semi__term'0 (* right *)
+                      | SML_rewrite semi__term'0 \<comment> \<open>left\<close> string \<comment> \<open>symb rewriting\<close> semi__term'0 \<comment> \<open>right\<close>
                       | SML_basic "string list"
                       | SML_binop semi__term'0 string semi__term'0
-                      | SML_annot semi__term'0 string (* type *)
-                      | SML_function "(semi__term'0 (* pattern *) \<times> semi__term'0 (* to return *)) list"
+                      | SML_annot semi__term'0 string \<comment> \<open>type\<close>
+                      | SML_function "(semi__term'0 \<comment> \<open>pattern\<close> \<times> semi__term'0 \<comment> \<open>to return\<close>) list"
                       | SML_apply semi__term'0 "semi__term'0 list"
-                      | SML_paren string (* left *) string (* right *) semi__term'0
+                      | SML_paren string \<comment> \<open>left\<close> string \<comment> \<open>right\<close> semi__term'0
                       | SML_let semi__term' semi__term'0
      and semi__term'1 = SML_open string
                       | SML_val_fun "semi__val_fun option" semi__term'0
@@ -87,7 +87,7 @@ definition "none = basic [\<open>NONE\<close>]"
 definition "some s = app \<open>SOME\<close> [s]"
 definition "option' f l = (case map_option f l of None \<Rightarrow> none | Some s \<Rightarrow> some s)"
 definition "option = option' id"
-definition "parenthesis (* mandatory parenthesis *) = paren \<open>(\<close> \<open>)\<close>"
+definition "parenthesis \<comment> \<open>mandatory parenthesis\<close> = paren \<open>(\<close> \<open>)\<close>"
 definition "binop_l s l = (case rev l of x # xs \<Rightarrow> List.fold (\<lambda>x. binop x s) xs x)"
 definition "list l = (case l of [] \<Rightarrow> basic [\<open>[]\<close>] | _ \<Rightarrow> paren \<open>[\<close> \<open>]\<close> (binop_l \<open>,\<close> l))"
 definition "list' f l = list (L.map f l)"

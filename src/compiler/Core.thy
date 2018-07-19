@@ -67,7 +67,7 @@ datatype ('a, 'b) embedding = Embed_theories "('a \<Rightarrow> 'b \<Rightarrow>
                                            "('a \<Rightarrow> 'b \<Rightarrow> semi__theory list \<times> 'b) list"
                                            "('a \<Rightarrow> 'b \<Rightarrow> all_meta list \<times> 'b) embedding_fun list"
 
-type_synonym 'a embedding' = "('a, compiler_env_config) embedding" (* polymorphism weakening needed by code_reflect *)
+type_synonym 'a embedding' = "('a, compiler_env_config) embedding" \<comment> \<open>polymorphism weakening needed by \<^theory_text>\<open>code_reflect\<close>\<close>
 
 definition "L_fold f =
  (let f_locale = \<lambda>loc_data l.
@@ -248,7 +248,7 @@ definition "txt''a' s = txt (\<lambda> n_thy. \<lambda> Gen_only_design \<Righta
 definition "txt_raw''a' s = txt_raw (\<lambda> n_thy. \<lambda> Gen_only_design \<Rightarrow> \<open>\<close> | _ \<Rightarrow> S.flatten (s n_thy))"
 
 definition thy_class ::
-  (* polymorphism weakening needed by code_reflect *)
+  \<comment> \<open>polymorphism weakening needed by \<^theory_text>\<open>code_reflect\<close>\<close>
   "_ embedding'" where \<open>thy_class =
   (let section = section' o (\<lambda>s. \<open>Class Model: \<close> @@ s)
      ; subsection = subsection'
@@ -520,24 +520,24 @@ The example we are defining in this section comes from the \autoref{fig:\<close>
             , PRINT_astype_lemmas_id2 ] ])\<close>
 
 definition "thy_enum_flat = Embed_theories []"
-definition  thy_enum :: (* polymorphism weakening needed by code_reflect *) "_ embedding'" where
+definition  thy_enum :: \<comment> \<open>polymorphism weakening needed by \<^theory_text>\<open>code_reflect\<close>\<close> "_ embedding'" where
            "thy_enum = Embed_theories [ section' \<open>Enum\<close>
                                       , PRINT_enum ]"
-definition  thy_haskell :: (* polymorphism weakening needed by code_reflect *) "_ embedding'" where
+definition  thy_haskell :: \<comment> \<open>polymorphism weakening needed by \<^theory_text>\<open>code_reflect\<close>\<close> "_ embedding'" where
            "thy_haskell = Embed_theories [ section' \<open>Haskell\<close>
                                          , PRINT_haskell ]"
 definition "thy_class_synonym = Embed_theories []"
 definition "thy_class_tree = Embed_theories []"
 definition "thy_class_flat = Embed_theories []"
 definition "thy_association = Embed_theories []"
-definition  thy_instance :: (* polymorphism weakening needed by code_reflect *) "_ embedding'" where
+definition  thy_instance :: \<comment> \<open>polymorphism weakening needed by \<^theory_text>\<open>code_reflect\<close>\<close> "_ embedding'" where
            "thy_instance = Embed_theories
                              [ section' \<open>Instance\<close>
                              , PRINT_examp_instance_defassoc_typecheck_var
                              , PRINT_examp_instance_defassoc
                              , PRINT_examp_instance
                              , PRINT_examp_instance_defassoc_typecheck ]"
-definition  thy_def_base_l :: (* polymorphism weakening needed by code_reflect *) "_ embedding'" where
+definition  thy_def_base_l :: \<comment> \<open>polymorphism weakening needed by \<^theory_text>\<open>code_reflect\<close>\<close> "_ embedding'" where
            "thy_def_base_l = Embed_theories [ section' \<open>BaseType\<close>
                                             , PRINT_examp_oclbase ]"
 definition "thy_def_state = (\<lambda> Floor1 \<Rightarrow> Embed_theories
@@ -672,7 +672,7 @@ definition "fold_thy' f_env_save f_try f_accu_reset f =
    | META_flush_all meta \<Rightarrow> comp_env_input_class_mk (fold_thy0 meta thy_flush_all)) f))"
 
 definition "compiler_env_config_update f env =
-  (* WARNING The semantics of the meta-embedded language is not intended to be reset here (like oid_start), only syntactic configurations of the compiler (path, etc...) *)
+  \<comment> \<open>WARNING The semantics of the meta-embedded language is not intended to be reset here (like \<open>oid_start\<close>), only syntactic configurations of the compiler (path, etc...)\<close>
  (let env' = f env in
   if D_input_meta env = [] then
     env'

@@ -50,13 +50,13 @@ subsection\<open>Type Definition\<close>
 
 datatype toy_collection = Set
                         | Sequence
-                        | Ordered0 (* ordered set *)
-                        | Subsets0 (*binding*)
+                        | Ordered0 \<comment> \<open>ordered set\<close>
+                        | Subsets0 \<^cancel>\<open>binding\<close>
                         | Union0
-                        | Redefines0 (*binding*)
-                        | Derived0 (*string*)
-                        | Qualifier0 (*binding \<times> use_toyty*)
-                        | Nonunique0 (*bag*)
+                        | Redefines0 \<^cancel>\<open>binding\<close>
+                        | Derived0 \<^cancel>\<open>string\<close>
+                        | Qualifier0 \<^cancel>\<open>binding \<times> use_toyty\<close>
+                        | Nonunique0 \<^cancel>\<open>bag\<close>
 
 datatype toy_multiplicity_single = Mult_nat nat
                                  | Mult_star
@@ -64,7 +64,7 @@ datatype toy_multiplicity_single = Mult_nat nat
 
 record toy_multiplicity = TyMult :: "(toy_multiplicity_single \<times> toy_multiplicity_single option) list"
                           TyRole :: "string option"
-                          TyCollect :: "toy_collection list" (* return type of the accessor (constrained by the above multiplicity) *)
+                          TyCollect :: "toy_collection list" \<comment> \<open>return type of the accessor (constrained by the above multiplicity)\<close>
 
 record toy_ty_class_node =  TyObjN_ass_switch :: nat
                             TyObjN_role_multip :: toy_multiplicity
@@ -74,11 +74,11 @@ record toy_ty_class =       TyObj_name :: string
                             TyObj_ass_arity :: nat
                             TyObj_from :: toy_ty_class_node
                             TyObj_to :: toy_ty_class_node
-datatype toy_ty_obj_core =  ToyTyCore_pre string (* class name, untyped *) (* FIXME perform the typing separately *)
-                          | ToyTyCore toy_ty_class (* class name, typed *)
+datatype toy_ty_obj_core =  ToyTyCore_pre string \<comment> \<open>class name, untyped\<close> (* FIXME perform the typing separately *)
+                          | ToyTyCore toy_ty_class \<comment> \<open>class name, typed\<close>
 datatype toy_ty_obj =       ToyTyObj  toy_ty_obj_core
-                                     "toy_ty_obj_core list (* the 'and' semantics *)
-                                                           list (* 'x # ...' means 'x < ...' *)" (* superclass *)
+                                     "toy_ty_obj_core list \<comment> \<open>the \<^theory_text>\<open>and\<close> semantics\<close>
+                                                           list \<comment> \<open>\<open>x # \<dots>\<close> means \<open>x < \<dots>\<close>\<close>" \<comment> \<open>superclass\<close>
 datatype toy_ty =           ToyTy_base_void (* NOTE can be merged in a generic tuple *)
                           | ToyTy_base_boolean
                           | ToyTy_base_integer
@@ -88,11 +88,11 @@ datatype toy_ty =           ToyTy_base_void (* NOTE can be merged in a generic t
                           | ToyTy_object toy_ty_obj
                           | ToyTy_collection toy_multiplicity toy_ty
                           | ToyTy_pair toy_ty toy_ty (* NOTE can be merged in a generic tuple *)
-                          | ToyTy_binding "string option (* name *) \<times> toy_ty" (* NOTE can be merged in a generic tuple *)
+                          | ToyTy_binding "string option \<comment> \<open>name\<close> \<times> toy_ty" (* NOTE can be merged in a generic tuple *)
                           | ToyTy_arrow toy_ty toy_ty
                           | ToyTy_class_syn string
                           | ToyTy_enum string
-                          | ToyTy_raw string (* denoting raw HOL-type *) (* FIXME to be removed *)
+                          | ToyTy_raw string \<comment> \<open>denoting raw HOL-type\<close> (* FIXME to be removed *)
 
 
 datatype toy_association_type = ToyAssTy_native_attribute
@@ -106,43 +106,43 @@ record toy_association =        ToyAss_type     :: toy_association_type
 datatype toy_ctxt_prefix = ToyCtxtPre | ToyCtxtPost
 
 datatype toy_ctxt_term = T_pure "term"
-                                "string option" (* represents the unparsed version of the term *)
-                       | T_to_be_parsed string (* raw, it includes extra quoting characters like DEL (char 127) *)
-                                        string (* same string but escaped without those quoting characters *)
+                                "string option" \<comment> \<open>represents the unparsed version of the term\<close>
+                       | T_to_be_parsed string \<comment> \<open>raw, it includes extra quoting characters like DEL (char 127)\<close>
+                                        string \<comment> \<open>same string but escaped without those quoting characters\<close>
                        | T_lambda string toy_ctxt_term
-datatype toy_prop = ToyProp_ctxt "string option" (* name *) toy_ctxt_term
-                  (*| ToyProp_rel toy_ty_obj (* states that the constraint should be true *)
-                  | ToyProp_ass toy_association_relation (* states the relation as true *)*)
-datatype toy_ctxt_term_inv = T_inv bool (* True: existential *) toy_prop
+datatype toy_prop = ToyProp_ctxt "string option" \<comment> \<open>name\<close> toy_ctxt_term
+                  \<^cancel>\<open>| ToyProp_rel toy_ty_obj \<comment> \<open>states that the constraint should be true\<close>
+                  | ToyProp_ass toy_association_relation \<comment> \<open>states the relation as true\<close>\<close>
+datatype toy_ctxt_term_inv = T_inv bool \<comment> \<open>True: existential\<close> toy_prop
 datatype toy_ctxt_term_pp = T_pp toy_ctxt_prefix toy_prop
                           | T_invariant toy_ctxt_term_inv
 
-record toy_ctxt_pre_post = Ctxt_fun_name :: string (* function name *)
+record toy_ctxt_pre_post = Ctxt_fun_name :: string \<comment> \<open>function name\<close>
                            Ctxt_fun_ty :: toy_ty
                            Ctxt_expr :: "toy_ctxt_term_pp list"
 
 datatype toy_ctxt_clause = Ctxt_pp toy_ctxt_pre_post
                          | Ctxt_inv toy_ctxt_term_inv
-record toy_ctxt = Ctxt_param :: "string list" (* param *)
+record toy_ctxt = Ctxt_param :: "string list" \<comment> \<open>param\<close>
                   Ctxt_ty :: toy_ty_obj
                   Ctxt_clause :: "toy_ctxt_clause list"
 
 datatype toy_class =   ToyClass
-                         string (* name of the class *)
-                         "(string (* name *) \<times> toy_ty) list" (* attribute *)
-                         "toy_class list" (* link to subclasses *)
+                         string \<comment> \<open>name of the class\<close>
+                         "(string \<comment> \<open>name\<close> \<times> toy_ty) list" \<comment> \<open>attribute\<close>
+                         "toy_class list" \<comment> \<open>link to subclasses\<close>
 
 record toy_class_raw = ClassRaw_name :: toy_ty_obj
-                       ClassRaw_own :: "(string (* name *) \<times> toy_ty) list" (* attribute *)
+                       ClassRaw_own :: "(string \<comment> \<open>name\<close> \<times> toy_ty) list" \<comment> \<open>attribute\<close>
                        ClassRaw_clause :: "toy_ctxt_clause list"
-                       ClassRaw_abstract :: bool (* True: abstract *)
+                       ClassRaw_abstract :: bool \<comment> \<open>True: abstract\<close>
 
 datatype toy_ass_class = ToyAssClass toy_association
                                      toy_class_raw
 
-datatype toy_class_synonym = ToyClassSynonym string (* name alias *) toy_ty
+datatype toy_class_synonym = ToyClassSynonym string \<comment> \<open>name alias\<close> toy_ty
 
-datatype toy_enum = ToyEnum string (* name *) "string (* constructor name *) list"
+datatype toy_enum = ToyEnum string \<comment> \<open>name\<close> "string \<comment> \<open>constructor name\<close> list"
 
 subsection\<open>Extending the Meta-Model\<close>
 
@@ -258,9 +258,9 @@ syntax "_rbt_fold" :: "_ \<Rightarrow> _" ("fold") translations "fold" \<rightle
 syntax "_rbt_entries" :: "_ \<Rightarrow> _" ("entries") translations "entries" \<rightleftharpoons> "CONST RBTS.entries"
 
 function (sequential) class_unflat_aux where
-(* (* FIXME replace with this simplified form *)
+(* FIXME replace with this simplified form *) \<^cancel>\<open>
    "class_unflat_aux rbt rbt_inv rbt_cycle r =
-   (case lookup rbt_cycle r of None (* cycle detection *) \<Rightarrow>
+   (case lookup rbt_cycle r of None \<comment> \<open>cycle detection\<close> \<Rightarrow>
       map_option
         (ToyClass
           r
@@ -269,10 +269,10 @@ function (sequential) class_unflat_aux where
                 id
                 (case lookup rbt_inv r of None \<Rightarrow> [] | Some l \<Rightarrow> l))
     | _ \<Rightarrow> None)"
-*)
+\<close>
    "class_unflat_aux rbt rbt_inv rbt_cycle r =
    (case lookup rbt_inv r of None \<Rightarrow>
-      (case lookup rbt_cycle r of None (* cycle detection *) \<Rightarrow>
+      (case lookup rbt_cycle r of None \<comment> \<open>cycle detection\<close> \<Rightarrow>
             map_option
               (ToyClass
                 r
@@ -287,7 +287,7 @@ function (sequential) class_unflat_aux where
                       ([]))
           | _ \<Rightarrow> None)
     | Some l \<Rightarrow>
-      (case lookup rbt_cycle r of None (* cycle detection *) \<Rightarrow>
+      (case lookup rbt_cycle r of None \<comment> \<open>cycle detection\<close> \<Rightarrow>
             map_option
               (ToyClass
                 r
@@ -389,8 +389,8 @@ definition "normalize0 f l =
 definition "class_unflat = (\<lambda> (l_class, l_ass).
   let l =
     let const_toyany' = ToyTyCore_pre const_toyany
-      ; rbt = (* fold classes:
-                 set \<open>ToyAny\<close> as default inherited class (for all classes linking to zero inherited classes) *)
+      ; rbt = \<comment> \<open>fold classes:\<close>
+              \<comment> \<open>set \<open>ToyAny\<close> as default inherited class (for all classes linking to zero inherited classes)\<close>
               insert
                 const_toyany
                 (toy_class_raw.make (ToyTyObj const_toyany' []) [] [] False)
@@ -399,8 +399,8 @@ definition "class_unflat = (\<lambda> (l_class, l_ass).
                     insert (cl_name_to_string cflat) (cflat \<lparr> ClassRaw_name := case ClassRaw_name cflat of ToyTyObj n [] \<Rightarrow> ToyTyObj n [[const_toyany']] | x \<Rightarrow> x \<rparr>))
                   l_class
                   RBT.empty) in
-    (* fold associations:
-       add remaining 'object' attributes *)
+    \<comment> \<open>fold associations:\<close>
+    \<comment> \<open>add remaining 'object' attributes\<close>
     L.map snd (entries (List.fold (\<lambda> (ass_oid, ass) \<Rightarrow>
       case let (l_none, l_some) = List.partition (\<lambda>(_, m). TyRole m = None) (ToyAss_relation' ass ) in
            L.flatten [l_none, normalize0 (\<lambda>(_, m). case TyRole m of Some s \<Rightarrow> String.to_list s) l_some] of
@@ -469,7 +469,7 @@ fun str_of_ty where "str_of_ty e =
   | ToyTy_base_real \<Rightarrow> \<open>Real\<close>
   | ToyTy_base_string \<Rightarrow> \<open>String\<close>
   | ToyTy_object (ToyTyObj (ToyTyCore_pre s) _) \<Rightarrow> s
-  (*| ToyTy_object (ToyTyObj (ToyTyCore ty_obj) _)*)
+  \<^cancel>\<open>| ToyTy_object (ToyTyObj (ToyTyCore ty_obj) _)\<close>
   | ToyTy_collection t toy_ty \<Rightarrow> (if is_sequence t then
                                     S.flatten [\<open>Sequence(\<close>, str_of_ty toy_ty,\<open>)\<close>]
                                   else
@@ -535,8 +535,8 @@ definition "var_at_when_toy_pre = \<open>@pre\<close>"
 datatype 'a tmp_sub = Tsub 'a
 record 'a inheritance =
   Inh :: 'a
-  Inh_sib :: "('a \<times> 'a list (* flat version of the 1st component *)) list" (* sibling *)
-  Inh_sib_unflat :: "'a list" (* sibling *)
+  Inh_sib :: "('a \<times> 'a list \<comment> \<open>flat version of the 1st component\<close>) list" \<comment> \<open>sibling\<close>
+  Inh_sib_unflat :: "'a list" \<comment> \<open>sibling\<close>
 datatype 'a tmp_inh = Tinh 'a
 datatype 'a tmp_univ = Tuniv 'a
 definition "of_inh = (\<lambda>Tinh l \<Rightarrow> l)"
@@ -551,7 +551,7 @@ fun fold_class_gen_aux where
                name
                l_attr
                (Tinh l_inh)
-               (Tsub (get_class_hierarchy_strict dataty)) (* order: bfs or dfs (modulo reversing) *)
+               (Tsub (get_class_hierarchy_strict dataty)) \<comment> \<open>order: bfs or dfs (modulo reversing)\<close>
                dataty
                accu in
   case dataty of [] \<Rightarrow> accu

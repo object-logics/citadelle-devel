@@ -85,17 +85,17 @@ In case no @{typ floor} is precised, we fix it to be @{term Floor1} by default.\
 datatype all_meta_embedding =
   (* TODO: we can merge Enum and ClassRaw into a common record *)
 
-                              (* USE *)
+                              \<comment> \<open>USE\<close>
                               META_enum ocl_enum
                             | META_class_raw floor ocl_class_raw
                             | META_association ocl_association
                             | META_ass_class floor ocl_ass_class
                             | META_ctxt floor ocl_ctxt
 
-                              (* Haskell *)
+                              \<comment> \<open>Haskell\<close>
                             | META_haskell IsaUnit
 
-                              (* invented *)
+                              \<comment> \<open>invented\<close>
                             | META_class_synonym ocl_class_synonym
                             | META_instance ocl_instance
                             | META_def_base_l ocl_def_base_l
@@ -112,31 +112,31 @@ datatype generation_semantics_ocl = Gen_only_design | Gen_only_analysis | Gen_de
 datatype generation_lemma_mode = Gen_sorry | Gen_no_dirty
 
 record compiler_env_config =  D_output_disable_thy :: bool
-                              D_output_header_thy :: "(string (* theory *)
-                                                      \<times> string list (* imports *)
-                                                      \<times> string (* import optional (compiler bootstrap) *)) option"
+                              D_output_header_thy :: "(string \<comment> \<open>theory\<close>
+                                                      \<times> string list \<comment> \<open>imports\<close>
+                                                      \<times> string \<comment> \<open>import optional (compiler bootstrap)\<close>) option"
                               D_ocl_oid_start :: internal_oids
                               D_output_position :: "nat \<times> nat"
                               D_ocl_semantics :: generation_semantics_ocl
                               D_input_class :: "ocl_class option"
-                                               (* last class considered for the generation *)
+                                               \<comment> \<open>last class considered for the generation\<close>
                               D_input_meta :: "all_meta_embedding list"
-                              D_input_instance :: "(string\<^sub>b\<^sub>a\<^sub>s\<^sub>e (* name (as key for rbt) *)
+                              D_input_instance :: "(string\<^sub>b\<^sub>a\<^sub>s\<^sub>e \<comment> \<open>name (as key for rbt)\<close>
                                                    \<times> ocl_instance_single
                                                    \<times> internal_oids) list"
-                                                  (* instance namespace environment *)
-                              D_input_state :: "(string\<^sub>b\<^sub>a\<^sub>s\<^sub>e (* name (as key for rbt) *)
+                                                  \<comment> \<open>instance namespace environment\<close>
+                              D_input_state :: "(string\<^sub>b\<^sub>a\<^sub>s\<^sub>e \<comment> \<open>name (as key for rbt)\<close>
                                                 \<times> (internal_oids
-                                                \<times> (string (* name *)
-                                                  \<times> ocl_instance_single (* alias *))
+                                                \<times> (string \<comment> \<open>name\<close>
+                                                  \<times> ocl_instance_single \<comment> \<open>alias\<close>)
                                                   ocl_def_state_core) list) list"
-                                               (* state namespace environment *)
-                              D_output_header_force :: bool (* true : the header should import the compiler for bootstrapping *)
-                              D_output_auto_bootstrap :: bool (* true : add the generation_syntax command *)
-                              D_ocl_accessor :: " string\<^sub>b\<^sub>a\<^sub>s\<^sub>e (* name of the constant added *) list (* pre *)
-                                                \<times> string\<^sub>b\<^sub>a\<^sub>s\<^sub>e (* name of the constant added *) list (* post *)"
-                              D_ocl_HO_type :: "(string\<^sub>b\<^sub>a\<^sub>s\<^sub>e (* raw HOL name (as key for rbt) *)) list"
-                              D_output_sorry_dirty :: "generation_lemma_mode option \<times> bool (* dirty *)" (* Some Gen_sorry or None and {dirty}: activate sorry mode for skipping proofs *)
+                                               \<comment> \<open>state namespace environment\<close>
+                              D_output_header_force :: bool \<comment> \<open>true : the header should import the compiler for bootstrapping\<close>
+                              D_output_auto_bootstrap :: bool \<comment> \<open>true : add the generation_syntax command\<close>
+                              D_ocl_accessor :: " string\<^sub>b\<^sub>a\<^sub>s\<^sub>e \<comment> \<open>name of the constant added\<close> list \<comment> \<open>pre\<close>
+                                                \<times> string\<^sub>b\<^sub>a\<^sub>s\<^sub>e \<comment> \<open>name of the constant added\<close> list \<comment> \<open>post\<close>"
+                              D_ocl_HO_type :: "(string\<^sub>b\<^sub>a\<^sub>s\<^sub>e \<comment> \<open>raw HOL name (as key for rbt)\<close>) list"
+                              D_output_sorry_dirty :: "generation_lemma_mode option \<times> bool \<comment> \<open>dirty\<close>" \<comment> \<open>\<open>Some Gen_sorry\<close> or \<open>None\<close> and \<open>{dirty}\<close>: activate sorry mode for skipping proofs\<close>
 
 subsection\<open>Operations of Fold, Map, ..., on the Meta-Model\<close>
 
@@ -195,10 +195,10 @@ consider the environment as a Meta-Model.\<close>
 datatype boot_generation_syntax = Boot_generation_syntax generation_semantics_ocl
 datatype boot_setup_env = Boot_setup_env compiler_env_config
 
-datatype all_meta = (* pure Isabelle *)
+datatype all_meta = \<comment> \<open>pure Isabelle\<close>
                     META_semi__theories semi__theories
 
-                    (* bootstrapping embedded languages *)
+                    \<comment> \<open>bootstrapping embedded languages\<close>
                   | META_boot_generation_syntax boot_generation_syntax
                   | META_boot_setup_env boot_setup_env
                   | META_all_meta_embedding all_meta_embedding
@@ -209,7 +209,7 @@ However a corresponding parser and printer would then be required.\<close>
 
 subsubsection\<open>Extending the Meta-Model\<close>
 
-locale O (* outer syntax *)
+locale O \<comment> \<open>outer syntax\<close>
 begin
 definition "i x = META_semi__theories o Theories_one o x"
 definition "datatype = i Theory_datatype"
