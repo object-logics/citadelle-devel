@@ -86,7 +86,7 @@ oops (* should be: sorry *)
    occur in the state. *)
 
 lemma REC_pre : "\<tau> \<Turnstile> Person_label\<^sub>g\<^sub>l\<^sub>o\<^sub>b\<^sub>a\<^sub>l\<^sub>i\<^sub>n\<^sub>v
-       \<Longrightarrow> \<tau> \<Turnstile> Person .allInstances()->includes\<^sub>S\<^sub>e\<^sub>t(X) (* X represented object in state *)
+       \<Longrightarrow> \<tau> \<Turnstile> Person .allInstances()->includes\<^sub>S\<^sub>e\<^sub>t(X) \<comment> \<open>\<open>X\<close> represented object in state\<close>
        \<Longrightarrow> \<exists> REC.  \<tau> \<Turnstile> REC(X)  \<triangleq> (Person_label\<^sub>i\<^sub>n\<^sub>v (X) and (X .boss <> null implies REC(X .boss)))"
 oops (* should be sorry
         Attempt to allegiate the burden of he following axiomatizations: could be
@@ -235,8 +235,8 @@ axiomatization where contentsATpre_def:
 " (self).contents@pre() = (\<lambda> \<tau>.
       SOME res. let res = \<lambda> _. res in
       if \<tau> \<Turnstile> (\<delta> self)
-      then ((\<tau> \<Turnstile> true) \<and>                                  (* pre *)
-            (\<tau> \<Turnstile> (res \<triangleq> if (self).boss@pre \<doteq> null  (* post *)
+      then ((\<tau> \<Turnstile> true) \<and>                                  \<comment> \<open>pre\<close>
+            (\<tau> \<Turnstile> (res \<triangleq> if (self).boss@pre \<doteq> null  \<comment> \<open>post\<close>
                          then Set{(self).salary@pre}
                          else (self).boss@pre .contents@pre()
                                     ->including\<^sub>S\<^sub>e\<^sub>t(self .salary@pre)
