@@ -79,9 +79,9 @@ definition "main =
    (compiler_env_config.extend
      (compiler_env_config_empty True None (oidInit (Oid 0)) Gen_only_design (None, False)
         \<lparr> D_output_disable_thy := False
-        , D_output_header_thy := Some (\<open>Employee_DesignModel_UMLPart_generated\<close>
-                                      ,[\<open>../src/OCL_main\<close>]
-                                      ,\<open>../src/compiler/Generator_dynamic_sequential\<close>) \<rparr>)
+        , D_output_header_thy := Some (\<open>Design_generated\<close>
+                                      ,[\<open>../Toy_Library\<close>]
+                                      ,\<open>../embedding/Generator_dynamic_sequential\<close>) \<rparr>)
      ( L.map (META_class_raw Floor1) Design
        @@@@ [ META_association (toy_association.make
                                   ToyAssTy_association
