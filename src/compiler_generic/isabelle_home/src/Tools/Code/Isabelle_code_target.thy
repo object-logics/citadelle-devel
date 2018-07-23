@@ -1,11 +1,7 @@
 (******************************************************************************
  * ISABELLE COPYRIGHT NOTICE, LICENCE AND DISCLAIMER.
  *
- * Copyright (c) 1986-2016 University of Cambridge,
- *                         Technische Universitaet Muenchen,
- *                         and contributors.
- *               2013-2016 Université Paris-Saclay, Univ. Paris-Sud, France
- *               2013-2016 IRT SystemX, France
+ * Copyright (c) 1986-2018 Contributors (in the changeset history)
  *
  * All rights reserved.
  *
@@ -37,8 +33,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************)
-
-chapter{* Part ... *}
 
 theory  Isabelle_code_target
 imports Main

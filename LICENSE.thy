@@ -43,7 +43,7 @@ country us where \<open>USA\<close>
 holder brucker :: de where \<open>Achim D. Brucker\<close>
 holder cam :: uk where \<open>University of Cambridge\<close>
 holder chakravarty where \<open>Manuel M T Chakravarty\<close>
-holder contributors where \<open>contributors\<close>
+holder contributors where \<open>Contributors (in the changeset history)\<close>
 holder coutts where \<open>Duncan Coutts\<close>
 holder ethz :: ch where \<open>ETH Zurich\<close>
 holder huber where \<open>Benedikt Huber\<close>
@@ -89,9 +89,7 @@ project Isabelle_Meta_Model :: "3-Clause BSD" where \<open>A Meta-Model for the 
 
 project Isabelle :: "3-Clause BSD" where \<open>
 ISABELLE COPYRIGHT NOTICE, LICENCE AND DISCLAIMER.
-\<close> defines 1986-2016 cam, tum, contributors
-          2013-2016 "u-psud"
-          2013-2016 "irt-systemx"
+\<close> defines 1986-2018 contributors
 
 project Haskabelle :: "3-Clause BSD" where \<open>
 Haskabelle --- Converting Haskell Source Files to Isabelle/HOL Theories.
