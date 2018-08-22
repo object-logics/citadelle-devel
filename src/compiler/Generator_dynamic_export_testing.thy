@@ -175,7 +175,7 @@ fun out_intensify' tps fmt = out_intensify (Timing.message (Timing.result tps) |
 structure Toplevel' = struct
   fun keep_theory f = Toplevel.keep (f o Toplevel.theory_of)
   fun keep f tr = (\<^command_keyword>\<open>print_syntax\<close>, Toplevel.keep f) :: tr
-  fun read_write_keep rw = (\<^command_keyword>\<open>print_syntax\<close>, fn tr => tr |> Toplevel.read_write rw |> Toplevel.keep (K ()))
+  fun read_write_keep rw = (\<^command_keyword>\<open>setup\<close>, fn tr => tr |> Toplevel.read_write rw |> Toplevel.keep (K ()))
   fun setup_theory (res, tr) f = rev ((\<^command_keyword>\<open>setup\<close>, Toplevel.theory (f res)) :: tr)
   fun keep_output tps fmt msg = cons (\<^command_keyword>\<open>print_syntax\<close>, Toplevel.keep (fn _ => out_intensify' tps fmt msg))
 end

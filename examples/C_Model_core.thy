@@ -59,7 +59,7 @@ section \<open>Acknowledgements\<close>
 theory C_Model_core
   imports "$HASKABELLE_HOME_USER/default/Prelude"
           "../src/UML_Main"
-          "../src/compiler/Generator_dynamic_parallel"
+          "../src/compiler/Generator_dynamic_concurrent"
           C_Model_init
 begin
 
@@ -122,7 +122,7 @@ declare [[syntax_ambiguity_warning = false]]
 generation_syntax [ deep
                       (THEORY Meta_C_generated)
                       (IMPORTS ["../src/UML_Main", "../src/compiler/Static", "../examples/C_Model_init"]
-                               "../src/compiler/Generator_dynamic_parallel")
+                               "../src/compiler/Generator_dynamic_concurrent")
                       SECTION
                       SORRY
                       [ in self ]

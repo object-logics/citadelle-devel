@@ -199,7 +199,7 @@ structure Toplevel' = struct
 
   val keep_theory = T.keep
   fun keep f tr = (\<^command_keyword>\<open>print_syntax\<close>, T.keep f) :: tr
-  fun read_write_keep rw = (\<^command_keyword>\<open>print_syntax\<close>, fn tr => tr |> T.read_write rw |> T.keep (K ()))
+  fun read_write_keep rw = (\<^command_keyword>\<open>setup\<close>, fn tr => tr |> T.read_write rw |> T.keep (K ()))
   fun setup_theory (res, tr) f = rev ((\<^command_keyword>\<open>setup\<close>, T.theory (f res)) :: tr)
   fun keep_output tps fmt msg = cons (\<^command_keyword>\<open>print_syntax\<close>, T.keep (fn _ => out_intensify' tps fmt msg))
 end
