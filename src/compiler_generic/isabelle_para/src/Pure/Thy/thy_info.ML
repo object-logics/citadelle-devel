@@ -56,7 +56,7 @@ val _ =
     if exists (Toplevel.is_skipped_proof o #state) segments then ()
     else
       let
-        val body = Thy_Output.present_thy thy segments;
+        val body = Thy_Output.present_thy options thy segments;
         val option = Present.document_option options;
       in
         if #disabled option then ()
@@ -64,7 +64,9 @@ val _ =
           let
             val latex = Latex.isabelle_body (Context.theory_name thy) body;
             val output = [Latex.output_text latex, Latex.output_positions file_pos latex];
-            val _ = Export.export thy "document.tex" output;
+            val _ =
+              if Options.bool options "export_document"
+              then Export.export thy "document.tex" output else ();
             val _ = if #enabled option then Present.theory_output thy output else ();
           in () end
       end));
